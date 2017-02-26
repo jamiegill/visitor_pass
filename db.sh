@@ -1,0 +1,2 @@
+dropdb visitor_pass
+createdb visitor_pass
