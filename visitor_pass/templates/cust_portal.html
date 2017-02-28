@@ -1,0 +1,9 @@
+{% import "macros.html" as macros %}
+{% extends "base.html" %}
+{% block content %}
+
+{% for pass in passes %}
+{{ macros.render_entry(pass) }}
+{% endfor %}
+
+{% endblock %}

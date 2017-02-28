@@ -1,0 +1,45 @@
+{% import "macros.html" as macros %}
+{% extends "base.html" %}
+
+{% block content %}
+<h1>
+    Add New Pass
+</h1>
+<h2>
+    {{ building.name }} license availability: {{ building.used_licenses }} / {{ building.total_licenses }}
+</h2>
+
+<p>
+    The following entry will be added to the system:
+</p>
+
+
+<form role="form" method="POST">
+    <div class="form-group">
+        <label for="pass_id">Pass#</label>
+        <input type="text" class="form-control" id="pass_id" name="pass_id" placeholder="Pass name/number" required>
+    </div>
+    <div class="form-group">
+        <label for="name">Name</label>
+        <input type="text" class="form-control" id="name" name="name" placeholder="<First> <Last>"></textarea>
+    </div>
+    <div class="form-group">
+        <label for="email">Email</label>
+        <input type="text" class="form-control" id="email" name="email" placeholder="Email Address" required></textarea>
+    </div>
+        <div class="form-group">
+        <label for="maxtime">Expiry Timer</label>
+        <input type="integer" class="form-control" id="maxtime" name="maxtime" placeholder="Expiry Time (minutes)" required></textarea>
+    </div>
+    <p>
+        *Pass#: this is the unique name/number which identifies a parking pass<br>
+        *Email: the owner/tenants email that is responsible for this parking pass<br>
+        *Expiry Timer: The time (in minutes) before the parking pass expires (24 hours = <b>1440</b> minutes)
+    </p>
+    <button type="submit" class="btn btn-default">Submit</button>
+</form>
+{% endblock %}
+
+
+
+

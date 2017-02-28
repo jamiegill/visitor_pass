@@ -1,0 +1,11 @@
+{% import "macros.html" as macros %}
+{% extends "base.html" %}
+
+{% block content %}
+<h1> {{ building.name }}  </h1>
+<h2>  </h2>
+{% for pass in passes %}
+{{ macros.render_entry(pass) }}
+{% endfor %}
+
+{% endblock %}

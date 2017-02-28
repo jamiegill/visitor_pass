@@ -1,0 +1,9 @@
+{% macro render_entry(pass) %}
+<div class="row render_entry">
+    <div class="col-md-10">
+        Pass#: {{ pass.pass_id }} <br>
+        License Plate#: {{ pass.license_plate }} <br>
+        Expires: {{ pass.expire }} <br><br>
+    </div>
+</div>
+{% endmacro %}
