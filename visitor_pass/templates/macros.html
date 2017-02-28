@@ -4,6 +4,9 @@
         Pass#: {{ pass.pass_id }} <br>
         License Plate#: {{ pass.license_plate }} <br>
         Expires: {{ pass.expire }} <br><br>
+        <form action="{{ url_for('delete_pass_get', pass_id=pass.id) }}">
+            <button type="submit" class="button_align">Delete</button>
+        </form>
     </div>
 </div>
 {% endmacro %}

@@ -21,15 +21,6 @@ def get_passes(building_id):
     passes=passes,
     building=building
     )
-    
-#@app.route("/passes/edit/<int:id>", methods=["GET"])
-#def edit_passes(id):
-#    """ view edit page """
-#    
-#    passes = session.query(Pass).filter(Pass.id == id).first()
-#    return render_template("edit_pass.html",
-#    passes=passes
-#    )
 
 @app.route("/passes/<int:building_id>/add", methods=["GET"])
 def add_pass_get(building_id):
@@ -54,7 +45,7 @@ def add_pass_post(building_id):
     # Once email is added to DB, get the last "added userid" and use this for next DB addition
     added_userid=session.query(User.id).order_by(User.id.desc()).first()[0]
     
-    # Add a pass to the DB 
+    # Add a pass to the DB and increase licenses used counter 
     add_pass = Pass(
         pass_id=request.form["pass_id"],
         maxtime=request.form["maxtime"],
@@ -66,10 +57,64 @@ def add_pass_post(building_id):
     session.add_all([add_pass, building])
     session.commit()
     
-    # increase licenses used counter
+    return redirect(url_for("get_passes", building_id=building_id))
+
+@app.route("/passes/<int:pass_id>/delete", methods=["GET"])
+def delete_pass_get(pass_id):
+    delete_email = []
+    # Get info about this pass
+    pass_data = session.query(Pass).filter(Pass.id == pass_id).first()
+    
+    # Get info about this pass' user
+    pass_user_id = pass_data.resident_id
+    user_data = session.query(User).filter(User.id == pass_user_id).first()
+    
+    # See how many resident_id instances are found for this pass
+    # jinja will choose whether to delete the email address or not
+    user_instances = len(session.query(Pass.pass_id).filter(Pass.resident_id == pass_user_id).all())
+    if user_instances == 1:
+        delete_email = True
+    else:
+        delete_email = False
+        
+    # Provide building details for redirect
+    building_id = pass_data.building_id
     
     
+    return render_template("delete_pass.html",
+    pass_data=pass_data,
+    user_data=user_data,
+    delete_email=delete_email,
+    building_id=building_id
+    )
     
+@app.route("/passes/<int:pass_id>/delete", methods=["POST"])
+def delete_pass_post(pass_id):
+    """ Delete Pass, decrease license count, Delete User """
+    # Get info about this pass
+    pass_data = session.query(Pass).filter(Pass.id == pass_id).first()
+    
+    # Get info about this pass' user
+    pass_user_id = pass_data.resident_id
+    user_data = session.query(User).filter(User.id == pass_user_id).first()
+    
+    # Delete the pass
+    session.delete(pass_data)
+    
+    # Obtain building ID and remove license
+    building_id = pass_data.building_id
+    building = session.query(Building).filter(Building.id == building_id).first()
+    building.used_licenses = building.used_licenses - 1
+        
+    session.add(building)
+    session.commit()
+    
+    
+    # Delete the user if only 1 instance is found in the passes DB
+    user_instances = len(session.query(Pass.pass_id).filter(Pass.resident_id == pass_user_id).all())
+    if user_instances == 1:
+        session.delete(user_data)
+
     return redirect(url_for("get_passes", building_id=building_id))
 
 #@app.route("/passes/cust_portal")

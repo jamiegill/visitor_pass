@@ -1,0 +1,33 @@
+{% import "macros.html" as macros %}
+{% extends "base.html" %}
+
+{% block content %}
+<h1>
+    Delete Pass# {{ pass_data.pass_id }}
+</h1>
+
+<p>
+    Are you sure?
+</p>
+
+<form role="form" method="POST">
+    <button type="submit" class="button_align">Yes</button>
+</form>
+<form action="{{ url_for('get_passes', building_id=building_id) }}">
+    <button type="submit" class="button_align">No</button>
+</form>
+
+Note:
+{% if delete_email == True %}
+Only this parking pass ({{ pass_data.pass_id }}) is associated to the following email address: {{ user_data.email }}<br>
+This email address will be deleted as well
+{% else %}
+This email address ({{ user_data.email }}) associated to this pass ({{ pass_data.pass_id }}) is also associated to other parking passes<br>
+This email address will NOT be deleted
+{% endif %}
+
+{% endblock %}
+
+
+
+

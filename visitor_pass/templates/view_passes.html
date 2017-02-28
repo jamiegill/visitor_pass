@@ -3,7 +3,11 @@
 
 {% block content %}
 <h1> {{ building.name }}  </h1>
-<h2>  </h2>
+<form action="{{ url_for('add_pass_get', building_id=building.id) }}">
+    <button type="submit" class="button_align">Add New Pass</button>
+</form>
+
+
 {% for pass in passes %}
 {{ macros.render_entry(pass) }}
 {% endfor %}
