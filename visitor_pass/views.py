@@ -5,17 +5,34 @@ import datetime
 from . import app
 from .database import session, Pass, Building, User
 
+def plate_datetime(passes):
+    # See if timestamp has expired
+    curr_time=datetime.datetime.now()
+    for record in passes:
+        record_id = record.id
+        record = record.plate_expire
+        if record == None:
+            pass
+        elif curr_time > record:
+            pass_record = session.query(Pass).filter(Pass.id == record_id).first()
+            pass_record.plate_expire = None
+            pass_record.license_plate = None
+            session.add(pass_record)
+            session.commit()
+
 @app.route("/")
 @app.route("/passes/<int:building_id>")
 def get_passes(building_id):
     """ List of passes for a building """
     
     passes = session.query(Pass)
-    passes = passes.order_by(Pass.id.desc())
+    passes = passes.order_by(Pass.plate_expire.asc())
     passes = passes.filter(Pass.building_id == building_id)
     
     # find building details
     building = session.query(Building).filter(Building.id == building_id).first()
+    
+    plate_datetime(passes)
     
     return render_template("view_passes.html",
     passes=passes,
@@ -26,6 +43,11 @@ def get_passes(building_id):
 def add_pass_get(building_id):
     building = session.query(Building)
     building = building.filter(Building.id == building_id).first()
+    total_licenses = building.total_licenses
+    used_licenses = building.used_licenses
+    if used_licenses > total_licenses:
+        return redirect(url_for("get_passes", building_id=building_id))
+    
     return render_template("add_pass.html",
     building=building
     )
@@ -117,12 +139,73 @@ def delete_pass_post(pass_id):
 
     return redirect(url_for("get_passes", building_id=building_id))
 
-#@app.route("/passes/cust_portal")
-#def customer_edit():
-#    
-#    passes = session.query(Pass)
-#    passes = passes.order_by(Pass.id.desc())
-#    
-#    return render_template("cust_portal",
-#    passes = passes)
+@app.route("/passes/<int:user_id>/cust_portal", methods=["GET"])
+def customer_pass_get(user_id):
     
+    """ List of passes for a user """
+    passes = session.query(Pass).filter(Pass.resident_id == user_id).all()
+    
+    plate_datetime(passes)
+    
+    # find building details
+    building_id = session.query(User).filter(User.id == user_id).first().building_id
+    building = session.query(Building).filter(Building.id == building_id).first()
+    
+    return render_template("cust_portal.html",
+    passes=passes,
+    building=building
+    )
+    
+@app.route("/passes/<int:pass_id>/cust_use_pass", methods=["GET"])
+def customer_use_pass_get(pass_id):
+    # Get info about this pass
+    pass_data = session.query(Pass).filter(Pass.id == pass_id).first()
+    
+    # Get info about this pass' user
+    pass_user_id = pass_data.resident_id
+    
+    return render_template("cust_use_pass.html",
+    pass_data=pass_data,
+    pass_user_id=pass_user_id
+    )
+    
+@app.route("/passes/<int:pass_id>/cust_use_pass", methods=["POST"])
+def customer_use_pass_post(pass_id):
+    # update license plate and license plate expiry
+    pass_data = session.query(Pass).filter(Pass.id == pass_id).first()
+    pass_data.license_plate = request.form["license_plate"]
+    pass_data.plate_expire = datetime.datetime.now() + datetime.timedelta(minutes = pass_data.maxtime)
+    session.add(pass_data)
+    session.commit()
+    
+    # Get info about this pass' user
+    pass_user_id = pass_data.resident_id
+    
+    return redirect(url_for("customer_pass_get", user_id=pass_user_id))
+    
+@app.route("/passes/<int:pass_id>/cust_end_pass", methods=["GET"])
+def customer_end_pass_get(pass_id):
+    # Get info about this pass
+    pass_data = session.query(Pass).filter(Pass.id == pass_id).first()
+    
+    # Get info about this pass' user
+    pass_user_id = pass_data.resident_id
+    
+    return render_template("cust_end_pass.html",
+    pass_data=pass_data,
+    pass_user_id=pass_user_id
+    )
+    
+@app.route("/passes/<int:pass_id>/cust_end_pass", methods=["POST"])
+def customer_end_pass_post(pass_id):
+    # Get info about this pass
+    pass_data = session.query(Pass).filter(Pass.id == pass_id).first()
+    pass_data.license_plate = None
+    pass_data.plate_expire = None
+    session.add(pass_data)
+    session.commit()
+    
+    # Get info about this pass' user
+    pass_user_id = pass_data.resident_id
+    
+    return redirect(url_for("customer_pass_get", user_id=pass_id))

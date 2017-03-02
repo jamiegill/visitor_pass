@@ -1,0 +1,28 @@
+{% import "macros.html" as macros %}
+{% extends "base.html" %}
+
+{% block content %}
+<h2>
+    End Pass# {{ pass_data.pass_id }}
+</h2>
+
+<p>
+    Are you sure you would like to end this pass?
+</p>
+<b>{{ pass_data.license_plate }}</b> will be removed from this pass and cannot be used again for <br>
+Expiry timer <b>{{ pass_data.plate_expire }}</b> will be removed from this pass<br>
+
+
+<form role="form" method="POST">
+    <button type="submit" class="button_align">Yes</button>
+</form>
+<form action="{{ url_for('customer_pass_get', user_id=pass_user_id) }}">
+    <button type="submit" class="button_align">Cancel</button>
+</form>
+
+
+{% endblock %}
+
+
+
+

@@ -3,10 +3,36 @@
     <div class="col-md-10">
         Pass#: {{ pass.pass_id }} <br>
         License Plate#: {{ pass.license_plate }} <br>
-        Expires: {{ pass.expire }} <br><br>
+        Expires: {{ pass.plate_expire | dateformat("%c") }} <br><br>
         <form action="{{ url_for('delete_pass_get', pass_id=pass.id) }}">
             <button type="submit" class="button_align">Delete</button>
         </form>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro customer_entry(pass) %}
+<div class="row cust_portal">
+    <div class="col-md-10">
+        {% if pass.license_plate == None %}
+        <h2> Parking pass# {{ pass.pass_id }} </h2>
+        Pass currently not being used, please click "Use Pass":
+        <form action="{{ url_for('customer_use_pass_get', pass_id=pass.id) }}">
+            <button type="submit" class="button_align">Use Pass</button>
+        </form>
+        
+        {% else %}
+        <h2> Parking pass# {{ pass.pass_id }} </h2>
+        Currently assigned to license plate <b>{{ pass.license_plate }}</b><br>
+        Expires <b>{{ pass.plate_expire | dateformat("%c") }}</b>
+        
+        
+        <form action="{{ url_for('customer_end_pass_get', pass_id=pass.id) }}">
+            <button type="submit" class="button_align">End Pass</button>
+        </form>
+        
+        {% endif %}
+        
     </div>
 </div>
 {% endmacro %}

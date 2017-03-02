@@ -1,0 +1,29 @@
+{% import "macros.html" as macros %}
+{% extends "base.html" %}
+
+{% block content %}
+<h2>
+    Use Pass# {{ pass_data.pass_id }}
+</h2>
+
+<p>
+    Please enter a guest's license plate number to begin the timer:
+</p>
+
+<form role="form" method="POST">
+    <div class="form-group">
+        <label for="license_plate">License Plate#:</label>
+        <input type="text" class="form-control" id="license_plate" name="license_plate" placeholder="License Plate" required>
+    </div>
+    <button type="submit" class="button_align">OK</button>
+</form>
+<form action="{{ url_for('customer_pass_get', user_id=pass_user_id) }}">
+    <button type="submit" class="button_align">back</button>
+</form>
+
+
+{% endblock %}
+
+
+
+
