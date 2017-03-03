@@ -189,6 +189,14 @@ def customer_use_pass_get(pass_id):
     
 @app.route("/passes/<int:pass_id>/cust_use_pass", methods=["POST"])
 def customer_use_pass_post(pass_id):
+    # Check if license plate has already been entered
+    try:
+        session.query(Pass).filter(Pass.license_plate.like(request.form["license_plate"])).first().license_plate
+        flash ("License plate {} already in use, please use different license plate".format(request.form["license_plate"]))
+        return redirect(url_for("customer_use_pass_get", pass_id=pass_id))
+    except AttributeError:
+        pass
+    
     # update license plate and license plate expiry
     pass_data = session.query(Pass).filter(Pass.id == pass_id).first()
     pass_data.license_plate = request.form["license_plate"]
