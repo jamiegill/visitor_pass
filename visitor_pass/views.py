@@ -54,15 +54,33 @@ def add_pass_get(building_id):
     
 @app.route("/passes/<int:building_id>/add", methods=["POST"])
 def add_pass_post(building_id):
-    # Add email address to the DB
-    add_email = User(
+    # Check for duplicate pass_id
+    try:
+        building=session.query(Pass).filter(Pass.building_id == building_id)
+        building.filter(Pass.pass_id.like(request.form["pass_id"])).first().pass_id
+        flash ("Pass \"{}\" has already been added, please add a new pass".format(request.form["pass_id"]))
+        return redirect(url_for("add_pass_get", building_id=building_id))
+    except AttributeError:
+        pass
+    
+    
+    # Check for duplicate email
+    try:
+        session.query(User).filter(User.email.like(request.form["email"])).first().email
+        flash ("Adding pass to existing email: {}".format(request.form["email"]))
+        
+    except AttributeError:
+        # Add email address to the DB
+        add_email = User(
         email=request.form["email"],
         name=request.form["name"],
         password="test",
         building_id=building_id
-    )
-    session.add(add_email)
-    session.commit()
+        )
+        session.add(add_email)
+        session.commit()
+    
+    
     
     # Once email is added to DB, get the last "added userid" and use this for next DB addition
     added_userid=session.query(User.id).order_by(User.id.desc()).first()[0]
@@ -205,5 +223,7 @@ def customer_end_pass_post(pass_id):
     session.add(pass_data)
     session.commit()
     
+    user_id = pass_data.resident_id
+    
     flash ("Parking ended")
-    return redirect(url_for("customer_pass_get", user_id=pass_id))
+    return redirect(url_for("customer_pass_get", user_id=user_id))
