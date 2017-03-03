@@ -33,7 +33,6 @@ def get_passes(building_id):
     building = session.query(Building).filter(Building.id == building_id).first()
     
     plate_datetime(passes)
-    
     return render_template("view_passes.html",
     passes=passes,
     building=building
@@ -46,8 +45,9 @@ def add_pass_get(building_id):
     total_licenses = building.total_licenses
     used_licenses = building.used_licenses
     if used_licenses > total_licenses:
+        flash ("Max licenses used. Please delete users or purchase more licenses")
         return redirect(url_for("get_passes", building_id=building_id))
-    
+            
     return render_template("add_pass.html",
     building=building
     )
@@ -78,7 +78,7 @@ def add_pass_post(building_id):
     building.used_licenses = building.used_licenses + 1
     session.add_all([add_pass, building])
     session.commit()
-    
+    flash ("User added")
     return redirect(url_for("get_passes", building_id=building_id))
 
 @app.route("/passes/<int:pass_id>/delete", methods=["GET"])
@@ -136,7 +136,7 @@ def delete_pass_post(pass_id):
     user_instances = len(session.query(Pass.pass_id).filter(Pass.resident_id == pass_user_id).all())
     if user_instances == 1:
         session.delete(user_data)
-
+    flash ("User deleted")
     return redirect(url_for("get_passes", building_id=building_id))
 
 @app.route("/passes/<int:user_id>/cust_portal", methods=["GET"])
@@ -180,7 +180,7 @@ def customer_use_pass_post(pass_id):
     
     # Get info about this pass' user
     pass_user_id = pass_data.resident_id
-    
+    flash ("Parking pass in effect")
     return redirect(url_for("customer_pass_get", user_id=pass_user_id))
     
 @app.route("/passes/<int:pass_id>/cust_end_pass", methods=["GET"])
@@ -205,7 +205,5 @@ def customer_end_pass_post(pass_id):
     session.add(pass_data)
     session.commit()
     
-    # Get info about this pass' user
-    pass_user_id = pass_data.resident_id
-    
+    flash ("Parking ended")
     return redirect(url_for("customer_pass_get", user_id=pass_id))

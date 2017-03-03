@@ -10,7 +10,7 @@
     Are you sure you would like to end this pass?
 </p>
 <b>{{ pass_data.license_plate }}</b> will be removed from this pass and cannot be used again for <br>
-Expiry timer <b>{{ pass_data.plate_expire }}</b> will be removed from this pass<br>
+Expiry timer <b>{{ pass_data.plate_expire | dateformat("%c") }}</b> will be removed from this pass<br>
 
 
 <form role="form" method="POST">
