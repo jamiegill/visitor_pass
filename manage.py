@@ -16,15 +16,15 @@ def run():
     
 @manager.command
 def building_seed():
-    building1 = Building(name="M3", used_licenses=3,
-                        address="1188 Pinetree Way,Coquitlam, BC, Canada", total_licenses=10)
+    building1 = Building(name="M3", used_licenses=0,
+                        address="1188 Pinetree Way,Coquitlam, BC, Canada", total_licenses=3)
     
-    building2 = Building(name="QuayWest II",
+    building2 = Building(name="QuayWest II", used_licenses=0,
                         address="1067 Marinaside Crescent,Vancouver, BC, Canada",
                         total_licenses=100, contact_name="Tom Dirsh", contact_phone="604 111 1111")
     
     
-    building3 = Building(name="M2",
+    building3 = Building(name="M2", used_licenses=0,
     address="3008 Glen Drive, Coquitlam, BC, Canada", total_licenses=10)
     session.add_all([building1, building2, building3])
     session.commit()

@@ -44,7 +44,7 @@ def add_pass_get(building_id):
     building = building.filter(Building.id == building_id).first()
     total_licenses = building.total_licenses
     used_licenses = building.used_licenses
-    if used_licenses > total_licenses:
+    if used_licenses >= total_licenses:
         flash ("Max licenses used. Please delete users or purchase more licenses")
         return redirect(url_for("get_passes", building_id=building_id))
             
@@ -151,10 +151,17 @@ def delete_pass_post(pass_id):
     
     
     # Delete the user if only 1 instance is found in the passes DB
-    user_instances = len(session.query(Pass.pass_id).filter(Pass.resident_id == pass_user_id).all())
-    if user_instances == 1:
+    print(type(pass_user_id))
+    user_instances = len(session.query(Pass).filter(Pass.resident_id == pass_user_id).all())
+    print("USER INSTANCES IS {}".format (user_instances))
+    if user_instances == 0:
+        print("IN IF STATEMENT!!!!!!!!!!!!!")
+        user_data = session.query(User).filter(User.id == pass_user_id).first()
         session.delete(user_data)
-    flash ("User deleted")
+        session.commit()
+        flash ("Pass and User deleted")
+    else:    
+        flash ("Pass deleted")
     return redirect(url_for("get_passes", building_id=building_id))
 
 @app.route("/passes/<int:user_id>/cust_portal", methods=["GET"])
