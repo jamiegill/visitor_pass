@@ -151,11 +151,8 @@ def delete_pass_post(pass_id):
     
     
     # Delete the user if only 1 instance is found in the passes DB
-    print(type(pass_user_id))
     user_instances = len(session.query(Pass).filter(Pass.resident_id == pass_user_id).all())
-    print("USER INSTANCES IS {}".format (user_instances))
     if user_instances == 0:
-        print("IN IF STATEMENT!!!!!!!!!!!!!")
         user_data = session.query(User).filter(User.id == pass_user_id).first()
         session.delete(user_data)
         session.commit()
