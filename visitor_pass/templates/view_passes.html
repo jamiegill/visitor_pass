@@ -2,14 +2,17 @@
 {% extends "base.html" %}
 
 {% block content %}
+
+{% if access_priv == "admin" %}
 <h1> {{ building.name }}  </h1>
 <form action="{{ url_for('add_pass_get', building_id=building.id) }}">
     <button type="submit" class="button_align">Add New Pass</button>
 </form>
-
+{% endif %}
 
 {% for pass in passes %}
 {{ macros.render_entry(pass) }}
+{{ macros.delete_entry(pass, access_priv) }}
 {% endfor %}
 
 {% endblock %}

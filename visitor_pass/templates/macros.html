@@ -4,11 +4,18 @@
         Pass#: {{ pass.pass_id }} <br>
         License Plate#: {{ pass.license_plate }} <br>
         Expires: {{ pass.plate_expire | dateformat("%c") }} <br><br>
-        <form action="{{ url_for('delete_pass_get', pass_id=pass.id) }}">
-            <button type="submit" class="button_align">Delete</button>
-        </form>
     </div>
 </div>
+{% endmacro %}
+
+{% macro delete_entry(pass, access_priv) %}
+{% if access_priv == "admin" %}
+<div class="row delete_entry">
+    <form action="{{ url_for('delete_pass_get', pass_id=pass.id) }}">
+        <button type="submit" class="button_align">Delete</button>
+    </form>
+</div>
+{% endif %}
 {% endmacro %}
 
 {% macro customer_entry(pass) %}

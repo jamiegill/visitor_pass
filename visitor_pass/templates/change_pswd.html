@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<form role="form" method="POST">
+    <div class="form-group">
+        <label for="curr_pswd">Current Password</label>
+        <input type="password" class="form-control" id="curr_pswd" name="curr_pswd" placeholder="Current Password" required>
+    </div><br>
+    <div class="form-group">
+        <label for="new_pswd">New Password</label>
+        <input type="password" class="form-control" id="new_pswd" name="new_pswd" placeholder="New Password" required> 
+    </div>
+    <div class="form-group">
+        <label for="confirm_pswd">Confirm New Password</label>
+        <input type="password" class="form-control" id="confirm_pswd" name="confirm_pswd" placeholder="Confirm New Password" required> 
+    </div>
+    <button type="submit" class="btn btn-default">Submit</button>
+</form>
+{% endblock %}

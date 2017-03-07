@@ -29,6 +29,7 @@ def plate_datetime(passes):
 def get_passes(building_id):
     """ List of passes for a building """
     
+    # Permit/deny access to page depening on logged in user
     if current_user.privilege in ("admin", "superuser") and current_user.building_id == building_id:
         access_priv = "admin"
     elif current_user.privilege in ("read_only") and current_user.building_id == building_id:
@@ -51,8 +52,18 @@ def get_passes(building_id):
     access_priv=access_priv
     )
 
+
 @app.route("/passes/<int:building_id>/add", methods=["GET"])
+@login_required
 def add_pass_get(building_id):
+    
+    # Permit/deny access to page depening on logged in user
+    if current_user.privilege in ("admin", "superuser") and current_user.building_id == building_id:
+        pass
+    else:
+        flash ("Authorization Error - redirected to login page")
+        return redirect(url_for("login_get"))
+    
     building = session.query(Building)
     building = building.filter(Building.id == building_id).first()
     total_licenses = building.total_licenses
@@ -118,10 +129,19 @@ def add_pass_post(building_id):
     return redirect(url_for("get_passes", building_id=building_id))
 
 @app.route("/passes/<int:pass_id>/delete", methods=["GET"])
+@login_required
 def delete_pass_get(pass_id):
     delete_email = []
+    
     # Get info about this pass
     pass_data = session.query(Pass).filter(Pass.id == pass_id).first()
+    
+    # Permit/deny access to page depening on logged in user
+    if current_user.privilege in ("admin", "superuser") and current_user.building_id == pass_data.building_id:
+        pass
+    else:
+        flash ("Authorization Error - redirected to login page")
+        return redirect(url_for("login_get"))
     
     # Get info about this pass' user
     pass_user_id = pass_data.resident_id
@@ -182,6 +202,14 @@ def delete_pass_post(pass_id):
 @app.route("/passes/<int:user_id>/cust_portal", methods=["GET"])
 def customer_pass_get(user_id):
     
+    # Permit/deny access to page depening on logged in user
+    if current_user.id == user_id or current_user.privilege == "superuser":
+        pass
+    else:
+        flash ("Authorization Error - redirected to login page")
+        return redirect(url_for("login_get"))
+    
+    
     """ List of passes for a user """
     passes = session.query(Pass).filter(Pass.resident_id == user_id).all()
     
@@ -200,6 +228,13 @@ def customer_pass_get(user_id):
 def customer_use_pass_get(pass_id):
     # Get info about this pass
     pass_data = session.query(Pass).filter(Pass.id == pass_id).first()
+    
+    # Permit/deny access to page depening on logged in user
+    if current_user.id == pass_data.resident_id or current_user.privilege == "superuser":
+        pass
+    else:
+        flash ("Authorization Error - redirected to login page")
+        return redirect(url_for("login_get"))
     
     # Get info about this pass' user
     pass_user_id = pass_data.resident_id
@@ -236,6 +271,13 @@ def customer_end_pass_get(pass_id):
     # Get info about this pass
     pass_data = session.query(Pass).filter(Pass.id == pass_id).first()
     
+    # Permit/deny access to page depening on logged in user
+    if current_user.id == pass_data.resident_id or current_user.privilege == "superuser":
+        pass
+    else:
+        flash ("Authorization Error - redirected to login page")
+        return redirect(url_for("login_get"))
+    
     # Get info about this pass' user
     pass_user_id = pass_data.resident_id
     
@@ -258,6 +300,29 @@ def customer_end_pass_post(pass_id):
     flash ("Parking ended")
     return redirect(url_for("customer_pass_get", user_id=user_id))
 
+@app.route("/change_pswd", methods=["GET"])
+@login_required
+def change_pswd_get():
+    return render_template("change_pswd.html")
+    
+@app.route("/change_pswd", methods=["POST"])
+def change_pswd_post():
+    curr_pswd = request.form["curr_pswd"]
+    new_pswd = request.form["new_pswd"]
+    confirm_pswd = request.form["confirm_pswd"]
+    user = session.query(User).filter_by(id=current_user.id).first()
+    
+    if not user or not check_password_hash(user.password, curr_pswd):
+        flash("Incorrect username or password")
+        return redirect(url_for("change_pswd_get"))
+    elif new_pswd != confirm_pswd:
+        flash("New password and confirmation password do not match")
+    elif len(new_pswd) < 8:
+        flash("Please use 8 or more characters for password")
+    
+    user.password = generate_password_hash(new_pswd)
+    flash("Password has been changed successfully")
+    return redirect(url_for("logout_get"))
 
 @app.route("/login", methods=["GET"])
 def login_get():
@@ -277,3 +342,8 @@ def login_post():
         return redirect(url_for("get_passes", building_id=user.building_id))
     elif user.privilege in ("general"):
         return redirect(url_for("customer_pass_get", user_id=user.id))
+        
+@app.route("/logout", methods=['GET'])
+def logout_get():
+    logout_user()
+    return redirect(url_for("login_get"))
