@@ -40,7 +40,7 @@ class Pass(Base):
     resident_id = Column(Integer, ForeignKey('users.id'))
 
     
-class User(Base):
+class User(Base, UserMixin):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True)
     name = Column(String(128))

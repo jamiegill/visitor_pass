@@ -1,9 +1,12 @@
 from flask import render_template, request, redirect, url_for, flash
-#from flask_login import login_user, login_required, current_user, logout_user
-from werkzeug.security import check_password_hash
+from flask_login import login_user, login_required, current_user, logout_user
+from .login import load_user
 import datetime
 from . import app
 from .database import session, Pass, Building, User
+from werkzeug.security import generate_password_hash, check_password_hash
+import random
+import string
 
 def plate_datetime(passes):
     # See if timestamp has expired
@@ -22,8 +25,17 @@ def plate_datetime(passes):
 
 @app.route("/")
 @app.route("/passes/<int:building_id>")
+@login_required
 def get_passes(building_id):
     """ List of passes for a building """
+    
+    if current_user.privilege in ("admin", "superuser") and current_user.building_id == building_id:
+        access_priv = "admin"
+    elif current_user.privilege in ("read_only") and current_user.building_id == building_id:
+        access_priv = "read_only"
+    else:
+        flash ("Authorization Error - redirected to login page")
+        return redirect(url_for("login_get"))
     
     passes = session.query(Pass)
     passes = passes.order_by(Pass.plate_expire.asc())
@@ -35,7 +47,8 @@ def get_passes(building_id):
     plate_datetime(passes)
     return render_template("view_passes.html",
     passes=passes,
-    building=building
+    building=building,
+    access_priv=access_priv
     )
 
 @app.route("/passes/<int:building_id>/add", methods=["GET"])
@@ -71,10 +84,13 @@ def add_pass_post(building_id):
         
     except AttributeError:
         # Add email address to the DB
+        password = []
+        password = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(6))
         add_email = User(
         email=request.form["email"],
         name=request.form["name"],
-        password="test",
+        privilege="general",
+        password=generate_password_hash(password),
         building_id=building_id
         )
         session.add(add_email)
@@ -96,7 +112,9 @@ def add_pass_post(building_id):
     building.used_licenses = building.used_licenses + 1
     session.add_all([add_pass, building])
     session.commit()
-    flash ("User added")
+    flash ("Pass added and user added - please record credentials below and supply them to the resident".format(request.form["email"],password))
+    flash ("Username: {}".format(request.form["email"]))
+    flash ("Password: {}".format(password))
     return redirect(url_for("get_passes", building_id=building_id))
 
 @app.route("/passes/<int:pass_id>/delete", methods=["GET"])
@@ -239,3 +257,23 @@ def customer_end_pass_post(pass_id):
     
     flash ("Parking ended")
     return redirect(url_for("customer_pass_get", user_id=user_id))
+
+
+@app.route("/login", methods=["GET"])
+def login_get():
+    return render_template("login.html")
+    
+@app.route("/login", methods=["POST"])
+def login_post():
+    email = request.form["email"]
+    password = request.form["password"]
+    user = session.query(User).filter_by(email=email).first()
+    if not user or not check_password_hash(user.password, password):
+        flash("Incorrect username or password")
+        return redirect(url_for("login_get"))
+        
+    login_user(user)
+    if user.privilege in ("admin", "read_only"):
+        return redirect(url_for("get_passes", building_id=user.building_id))
+    elif user.privilege in ("general"):
+        return redirect(url_for("customer_pass_get", user_id=user.id))
