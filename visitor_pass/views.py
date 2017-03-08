@@ -321,6 +321,8 @@ def change_pswd_post():
         flash("Please use 8 or more characters for password")
     
     user.password = generate_password_hash(new_pswd)
+    session.add(user)
+    session.commit()
     flash("Password has been changed successfully")
     return redirect(url_for("logout_get"))
 

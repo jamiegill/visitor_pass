@@ -12,7 +12,7 @@
 {% if access_priv == "admin" %}
 <div class="row delete_entry">
     <form action="{{ url_for('delete_pass_get', pass_id=pass.id) }}">
-        <button type="submit" class="button_align">Delete</button>
+        <button type="submit" class="btn btn-danger">Delete</button>
     </form>
 </div>
 {% endif %}
@@ -22,14 +22,14 @@
 <div class="row cust_portal">
     <div class="col-md-10">
         {% if pass.license_plate == None %}
-        <h2> Parking pass# {{ pass.pass_id }} </h2>
+        <h3> Parking pass# {{ pass.pass_id }} </h3>
         Pass currently not being used, please click "Use Pass":
         <form action="{{ url_for('customer_use_pass_get', pass_id=pass.id) }}">
-            <button type="submit" class="button_align">Use Pass</button>
+            <button type="submit" class="btn btn-primary">Use Pass</button>
         </form>
         
         {% else %}
-        <h2> Parking pass# {{ pass.pass_id }} </h2>
+        <h3> Parking pass# {{ pass.pass_id }} </h3>
         Currently assigned to license plate <b>{{ pass.license_plate }}</b><br>
         Expires <b>{{ pass.plate_expire | dateformat("%c") }}</b>
         

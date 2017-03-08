@@ -3,3 +3,26 @@ div metadata {
     font-size: 1.5em;
 }
 
+body{
+    font-family: "sans-serif";
+    text-align: center;
+}
+
+input {
+    padding: 5px 20px;
+    margin: 8px 5px;
+    box-sizing: border-box;
+    border: 2px solid silver;
+    border-radius: 4px;
+    background-color: white;
+}
+input:focus {
+    border: 2px solid #2768d1;
+}
+
+button {
+    margin: 10px;
+}
+h1, .logged_in {
+    color: white;
+}
