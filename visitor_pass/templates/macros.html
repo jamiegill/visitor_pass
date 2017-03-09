@@ -1,26 +1,34 @@
-{% macro render_entry(pass) %}
-<div class="row render_entry">
-    <div class="col-md-10">
-        Pass#: {{ pass.pass_id }} <br>
-        License Plate#: {{ pass.license_plate }} <br>
-        Expires: {{ pass.plate_expire | dateformat("%c") }} <br><br>
-    </div>
-</div>
+{% macro render_entry(pass, access_priv) %}
+    <tr height="40">
+        <td>{{ pass.pass_id }}</td>
+        
+        {% if access_priv == "admin" %}
+        <td>{{ pass.unit }}</td>
+        {% endif %}
+        
+        <td>{{ pass.license_plate }}</td>
+        
+        {% if pass.plate_expire == None %}
+        <td><font color="red">Pass not in use</font></td>
+        {% else %}
+        <td><font color="green">{{ pass.plate_expire | dateformat("%c") }}</font></td>
+        {% endif %}
+        
+        <td>
+            {% if access_priv == "admin" %}
+            <div class="row delete_entry">
+                <form action="{{ url_for('delete_pass_get', pass_id=pass.id) }}">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+            {% endif %}
+        </td>
+    </tr>
 {% endmacro %}
 
-{% macro delete_entry(pass, access_priv) %}
-{% if access_priv == "admin" %}
-<div class="row delete_entry">
-    <form action="{{ url_for('delete_pass_get', pass_id=pass.id) }}">
-        <button type="submit" class="btn btn-danger">Delete</button>
-    </form>
-</div>
-{% endif %}
-{% endmacro %}
 
 {% macro customer_entry(pass) %}
-<div class="row cust_portal">
-    <div class="col-md-10">
+<div>
         {% if pass.license_plate == None %}
         <h3> Parking pass# {{ pass.pass_id }} </h3>
         Pass currently not being used, please click "Use Pass":
@@ -40,6 +48,5 @@
         
         {% endif %}
         
-    </div>
 </div>
 {% endmacro %}

@@ -35,7 +35,7 @@ def get_passes(building_id):
     elif current_user.privilege in ("read_only") and current_user.building_id == building_id:
         access_priv = "read_only"
     else:
-        flash ("Authorization Error - redirected to login page")
+        flash ("Authorization Error - redirected to login page", "danger")
         return redirect(url_for("login_get"))
     
     passes = session.query(Pass)
@@ -61,7 +61,7 @@ def add_pass_get(building_id):
     if current_user.privilege in ("admin", "superuser") and current_user.building_id == building_id:
         pass
     else:
-        flash ("Authorization Error - redirected to login page")
+        flash ("Authorization Error - redirected to login page", "danger")
         return redirect(url_for("login_get"))
     
     building = session.query(Building)
@@ -69,7 +69,7 @@ def add_pass_get(building_id):
     total_licenses = building.total_licenses
     used_licenses = building.used_licenses
     if used_licenses >= total_licenses:
-        flash ("Max licenses used. Please delete users or purchase more licenses")
+        flash ("Max licenses used. Please delete users or purchase more licenses", "warning")
         return redirect(url_for("get_passes", building_id=building_id))
             
     return render_template("add_pass.html",
@@ -82,7 +82,7 @@ def add_pass_post(building_id):
     try:
         building=session.query(Pass).filter(Pass.building_id == building_id)
         building.filter(Pass.pass_id.like(request.form["pass_id"])).first().pass_id
-        flash ("Pass \"{}\" has already been added, please add a new pass".format(request.form["pass_id"]))
+        flash ("Pass \"{}\" has already been added, please add a new pass".format(request.form["pass_id"]), "warning")
         return redirect(url_for("add_pass_get", building_id=building_id))
     except AttributeError:
         pass
@@ -91,7 +91,7 @@ def add_pass_post(building_id):
     # Check for duplicate email
     try:
         session.query(User).filter(User.email.like(request.form["email"])).first().email
-        flash ("Adding pass to existing email: {}".format(request.form["email"]))
+        flash ("Adding pass to existing email: {}".format(request.form["email"]), "info")
         
     except AttributeError:
         # Add email address to the DB
@@ -116,6 +116,7 @@ def add_pass_post(building_id):
     add_pass = Pass(
         pass_id=request.form["pass_id"],
         maxtime=request.form["maxtime"],
+        unit=request.form["unit"],
         building_id=building_id,
         resident_id=added_userid
     )
@@ -123,9 +124,8 @@ def add_pass_post(building_id):
     building.used_licenses = building.used_licenses + 1
     session.add_all([add_pass, building])
     session.commit()
-    flash ("Pass added and user added - please record credentials below and supply them to the resident".format(request.form["email"],password))
-    flash ("Username: {}".format(request.form["email"]))
-    flash ("Password: {}".format(password))
+    flash ("Pass added and user added - please record credentials below and supply them to the resident".format(request.form["email"],password), "success")
+    flash ("Username: {}   |   Password: {}".format(request.form["email"], password), "info")
     return redirect(url_for("get_passes", building_id=building_id))
 
 @app.route("/passes/<int:pass_id>/delete", methods=["GET"])
@@ -140,7 +140,7 @@ def delete_pass_get(pass_id):
     if current_user.privilege in ("admin", "superuser") and current_user.building_id == pass_data.building_id:
         pass
     else:
-        flash ("Authorization Error - redirected to login page")
+        flash ("Authorization Error - redirected to login page", "danger")
         return redirect(url_for("login_get"))
     
     # Get info about this pass' user
@@ -194,9 +194,9 @@ def delete_pass_post(pass_id):
         user_data = session.query(User).filter(User.id == pass_user_id).first()
         session.delete(user_data)
         session.commit()
-        flash ("Pass and User deleted")
+        flash ("Pass and User deleted", "info")
     else:    
-        flash ("Pass deleted")
+        flash ("Pass deleted", "info")
     return redirect(url_for("get_passes", building_id=building_id))
 
 @app.route("/passes/<int:user_id>/cust_portal", methods=["GET"])
@@ -206,7 +206,7 @@ def customer_pass_get(user_id):
     if current_user.id == user_id or current_user.privilege == "superuser":
         pass
     else:
-        flash ("Authorization Error - redirected to login page")
+        flash ("Authorization Error - redirected to login page", "danger")
         return redirect(url_for("login_get"))
     
     
@@ -233,7 +233,7 @@ def customer_use_pass_get(pass_id):
     if current_user.id == pass_data.resident_id or current_user.privilege == "superuser":
         pass
     else:
-        flash ("Authorization Error - redirected to login page")
+        flash ("Authorization Error - redirected to login page", "danger")
         return redirect(url_for("login_get"))
     
     # Get info about this pass' user
@@ -249,7 +249,7 @@ def customer_use_pass_post(pass_id):
     # Check if license plate has already been entered
     try:
         session.query(Pass).filter(Pass.license_plate.like(request.form["license_plate"])).first().license_plate
-        flash ("License plate {} already in use, please use different license plate".format(request.form["license_plate"]))
+        flash ("License plate {} already in use, please use different license plate".format(request.form["license_plate"]), "warning")
         return redirect(url_for("customer_use_pass_get", pass_id=pass_id))
     except AttributeError:
         pass
@@ -263,7 +263,7 @@ def customer_use_pass_post(pass_id):
     
     # Get info about this pass' user
     pass_user_id = pass_data.resident_id
-    flash ("Parking pass in effect")
+    flash ("Parking pass in effect", "success")
     return redirect(url_for("customer_pass_get", user_id=pass_user_id))
     
 @app.route("/passes/<int:pass_id>/cust_end_pass", methods=["GET"])
@@ -275,7 +275,7 @@ def customer_end_pass_get(pass_id):
     if current_user.id == pass_data.resident_id or current_user.privilege == "superuser":
         pass
     else:
-        flash ("Authorization Error - redirected to login page")
+        flash ("Authorization Error - redirected to login page", "danger")
         return redirect(url_for("login_get"))
     
     # Get info about this pass' user
@@ -297,7 +297,7 @@ def customer_end_pass_post(pass_id):
     
     user_id = pass_data.resident_id
     
-    flash ("Parking ended")
+    flash ("Parking ended", "info")
     return redirect(url_for("customer_pass_get", user_id=user_id))
 
 @app.route("/change_pswd", methods=["GET"])
@@ -313,17 +313,19 @@ def change_pswd_post():
     user = session.query(User).filter_by(id=current_user.id).first()
     
     if not user or not check_password_hash(user.password, curr_pswd):
-        flash("Incorrect username or password")
+        flash("Incorrect username or password", "danger")
         return redirect(url_for("change_pswd_get"))
     elif new_pswd != confirm_pswd:
-        flash("New password and confirmation password do not match")
+        flash("New password and confirmation password do not match", "warning")
+        return redirect(url_for("change_pswd_get"))
     elif len(new_pswd) < 8:
-        flash("Please use 8 or more characters for password")
+        flash("Please use 8 or more characters for password", "warning")
+        return redirect(url_for("change_pswd_get"))
     
     user.password = generate_password_hash(new_pswd)
     session.add(user)
     session.commit()
-    flash("Password has been changed successfully")
+    flash("Password has been changed successfully", "success")
     return redirect(url_for("logout_get"))
 
 @app.route("/login", methods=["GET"])
@@ -336,7 +338,7 @@ def login_post():
     password = request.form["password"]
     user = session.query(User).filter_by(email=email).first()
     if not user or not check_password_hash(user.password, password):
-        flash("Incorrect username or password")
+        flash("Incorrect username or password", "danger")
         return redirect(url_for("login_get"))
         
     login_user(user)

@@ -28,6 +28,7 @@ class Building(Base):
 class Pass(Base):
     __tablename__ = "passes"
     id = Column(Integer, primary_key=True)
+    unit = Column(String(128))
     pass_id = Column(String(128), nullable=False)
     maxtime = Column(Integer, nullable=False)
     license_plate = Column(String(128), unique=True)

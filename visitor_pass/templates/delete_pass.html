@@ -6,20 +6,26 @@
     Delete Pass# {{ pass_data.pass_id }}
 </h1>
 
-<p>
+<h4>
     Are you sure?
-</p>
+</h4>
 
+<div class="btn-group">
 <form role="form" method="POST">
-    <button type="submit" class="button_align">Yes</button>
+    <button type="submit" class="btn btn-danger">Yes</button>
 </form>
-<form action="{{ url_for('get_passes', building_id=building_id) }}">
-    <button type="submit" class="button_align">No</button>
-</form>
+</div>
 
+<div class="btn-group">
+<form action="{{ url_for('get_passes', building_id=building_id) }}">
+    <button type="submit" class="btn btn-default btn-group">No</button>
+</form>
+</div>
+
+<div>
 Note:
 {% if delete_email == True %}
-Only this parking pass ({{ pass_data.pass_id }}) is associated to the following email address: {{ user_data.email }}<br>
+Only this parking pass (<b>{{ pass_data.pass_id }}</b>) is associated to the following email address: <b>{{ user_data.email }}</b><br>
 This email address will be deleted as well
 {% else %}
 This email address ({{ user_data.email }}) associated to this pass ({{ pass_data.pass_id }}) is also associated to other parking passes<br>
@@ -28,6 +34,6 @@ This email address will NOT be deleted
 
 {% endblock %}
 
-
+</div>
 
 
