@@ -2,13 +2,16 @@
 {% extends "base.html" %}
 {% block content %}
 
+<div>
+    <h2 class="pull-left">Building: {{ building.name }}</h2><br><br><br><br>
+    <p class = "pull-left"> timezone = {{ building.timezone }}</p>
+</div>
 
 {% for pass in passes %}
-<div>
-    <h2 class="pull-left">Building: {{ building.name }}</h2>
-</div>
+
+    
 <br><br><br>
-{{ macros.customer_entry(pass) }}
+{{ macros.customer_entry(pass, building) }}
 {% endfor %}
 
 {% endblock %}

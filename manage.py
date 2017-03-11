@@ -71,13 +71,14 @@ def addbuilding():
         if session.query(Building).filter_by(name=name).first():
             print("Building with that name already exists")
             return
+        timezone = input("Timezone(eg. US/Eastern): ")
         address = input("Address: ")
         total_licenses = int(input("Licenses: "))
         contact_name = input("Building contact name: ")
         contact_phone = input("Building contact phone number: ")
         building = Building(name=name, address=address, total_licenses=total_licenses,
                             contact_name=contact_name, contact_phone=contact_phone,
-                            used_licenses=0
+                            used_licenses=0, timezone=timezone
         )
         session.add(building)
         session.commit()

@@ -20,6 +20,8 @@ class Building(Base):
     contact_phone = Column(String(128))
     total_licenses = Column(Integer, nullable=False)
     used_licenses = Column(Integer)
+    # timezone must be pytz timezone (ex. "US/Eastern")
+    timezone = Column(String(128))
     creation_date = Column(DateTime, default=datetime.datetime.now())
     
     visitor_pass = relationship("Pass", backref="building")

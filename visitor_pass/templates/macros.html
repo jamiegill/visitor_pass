@@ -1,4 +1,4 @@
-{% macro render_entry(pass, access_priv) %}
+{% macro render_entry(pass, access_priv, building) %}
     <tr height="40">
         <td>{{ pass.pass_id }}</td>
         
@@ -11,7 +11,7 @@
         {% if pass.plate_expire == None %}
         <td><font color="red">Pass not in use</font></td>
         {% else %}
-        <td><font color="green">{{ pass.plate_expire | dateformat("%c") }}</font></td>
+        <td><font color="green">{{ pass.plate_expire | dateformat("%c", building.timezone) }}</font></td>
         {% endif %}
         
         <td>
@@ -27,7 +27,7 @@
 {% endmacro %}
 
 
-{% macro customer_entry(pass) %}
+{% macro customer_entry(pass, building) %}
 <div>
         {% if pass.license_plate == None %}
         <h3> Parking pass# {{ pass.pass_id }} </h3>
@@ -38,12 +38,13 @@
         
         {% else %}
         <h3> Parking pass# {{ pass.pass_id }} </h3>
-        Currently assigned to license plate <b>{{ pass.license_plate }}</b><br>
-        Expires <b>{{ pass.plate_expire | dateformat("%c") }}</b>
+        Currently assigned to license plate <b><font color="green">{{ pass.license_plate }}</font></b><br>
+        Expires <b><font color="green">{{ pass.plate_expire | dateformat("%c", building.timezone) }}</font></b>
+        
         
         
         <form action="{{ url_for('customer_end_pass_get', pass_id=pass.id) }}">
-            <button type="submit" class="button_align">End Pass</button>
+            <button type="submit" class="btn btn-danger">End Pass</button>
         </form>
         
         {% endif %}

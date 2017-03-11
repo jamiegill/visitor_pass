@@ -4,6 +4,7 @@
 {% block content %}
 <div class="btn-group pull-left">
     <h2> Building Name: {{ building.name }}  </h2>
+    <p class = "pull-left"> timezone = {{ building.timezone }}</p>
 
 {% if access_priv == "admin" %}
 <form action="{{ url_for('add_pass_get', building_id=building.id) }}">
@@ -25,7 +26,7 @@
         <td></td>
     </tr>
 {% for pass in passes %}
-{{ macros.render_entry(pass, access_priv) }}
+{{ macros.render_entry(pass, access_priv, building) }}
 {% endfor %}
 </table>
 

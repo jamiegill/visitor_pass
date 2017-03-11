@@ -2,24 +2,29 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>
+<div>
+    <h2 class="pull-left">Building: {{ building.name }}</h2><br><br><br><br>
+    <p class = "pull-left"> timezone = {{ building.timezone }}</p>
+</div>
+<br><br><br>
+<h3>
     End Pass# {{ pass_data.pass_id }}
-</h2>
+</h3>
 
 <p>
     Are you sure you would like to end this pass?
 </p>
 <b>{{ pass_data.license_plate }}</b> will be removed from this parking pass<br>
-Expiry timer <b>{{ pass_data.plate_expire | dateformat("%c") }}</b> will be removed from this pass<br>
+Expiry timer <b>{{ pass_data.plate_expire | dateformat("%c", building.timezone) }}</b> will be removed from this pass<br>
 
-
-<form role="form" method="POST">
-    <button type="submit" class="button_align">Yes</button>
+<div class="btn-group">
+<form class="btn-group" role="form" method="POST">
+    <button type="submit" class="btn btn-danger">Yes</button>
 </form>
-<form action="{{ url_for('customer_pass_get', user_id=pass_user_id) }}">
-    <button type="submit" class="button_align">Cancel</button>
+<form class="btn-group" action="{{ url_for('customer_pass_get', user_id=pass_user_id) }}">
+    <button type="submit" class="btn btn-primary">Cancel</button>
 </form>
-
+</div>
 
 {% endblock %}
 

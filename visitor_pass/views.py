@@ -5,7 +5,6 @@ import datetime
 from . import app
 from .database import session, Pass, Building, User
 from werkzeug.security import generate_password_hash, check_password_hash
-import random
 import string
 
 def plate_datetime(passes):
@@ -278,12 +277,17 @@ def customer_end_pass_get(pass_id):
         flash ("Authorization Error - redirected to login page", "danger")
         return redirect(url_for("login_get"))
     
-    # Get info about this pass' user
+    # Get info about this pass' user and building
     pass_user_id = pass_data.resident_id
+    pass_building_id = pass_data.building_id
+    building = session.query(Building).filter(Building.id == pass_building_id).first()
+    
+    print("BUILDING TIMEZONE IS {}".format(building.timezone))
     
     return render_template("cust_end_pass.html",
     pass_data=pass_data,
-    pass_user_id=pass_user_id
+    pass_user_id=pass_user_id,
+    building=building
     )
     
 @app.route("/passes/<int:pass_id>/cust_end_pass", methods=["POST"])
