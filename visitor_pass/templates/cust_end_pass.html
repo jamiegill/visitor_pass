@@ -15,7 +15,7 @@
     Are you sure you would like to end this pass?
 </p>
 <b>{{ pass_data.license_plate }}</b> will be removed from this parking pass<br>
-Expiry timer <b>{{ pass_data.plate_expire | dateformat("%c", building.timezone) }}</b> will be removed from this pass<br>
+Expiry timer <b>{{ pass_data.plate_expire | dateformat(building.timezone) }}</b> will be removed from this pass<br>
 
 <div class="btn-group">
 <form class="btn-group" role="form" method="POST">

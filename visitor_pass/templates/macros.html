@@ -11,7 +11,7 @@
         <td><font color="red">Pass not in use</font></td>
         {% else %}
         
-        <td><font color="green">{{ pass.plate_expire  | dateformat("%c", building.timezone) }}</font></td>
+        <td><font color="green">{{ pass.plate_expire  | dateformat( building.timezone) }}</font></td>
         {% endif %}
 
         
@@ -52,7 +52,7 @@
         {% else %}
         <h3> Parking pass# {{ pass.pass_id }} </h3>
         Currently assigned to license plate <b><font color="green">{{ pass.license_plate }}</font></b><br>
-        Expires <b><font color="green">{{ pass.plate_expire | dateformat("%c", building.timezone) }}</font></b>
+        Expires <b><font color="green">{{ pass.plate_expire | dateformat(building.timezone) }}</font></b>
         {% if not pass.email_1 == None or not pass.email_2 == None %}<br>
         Email(s) receiving notifications:<br>
         {% if not pass.email_1 == None %}

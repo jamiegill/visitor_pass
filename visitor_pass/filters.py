@@ -4,7 +4,7 @@ import mistune as md
 import pytz
 
 @app.template_filter()
-def dateformat(date, format, timezone):
+def dateformat(date, timezone):
     if not date:
         return None
     tz = pytz.timezone(timezone)
@@ -12,5 +12,5 @@ def dateformat(date, format, timezone):
     tz_aware_dt = utc.localize(date)
     local_dt = tz_aware_dt.astimezone(tz)
     
-    print(local_dt.strftime(format))    
-    return local_dt.strftime(format)
+    print(local_dt.strftime('%a %b %d %I:%M:%S %p %Y'))    
+    return local_dt.strftime('%a %b %d %I:%M:%S %p %Y')

@@ -1,0 +1,12 @@
+2018-03-20 12:43:30,511:DEBUG:visitor_pass.views:M3:commit success - UsePass PassID = 23, Pass = my_pass, License Plate = 123456, Plate Expire = 2018-03-21 12:43:30.477866 UTC, Email1 = , Email2 = 
+2018-03-20 12:45:25,268:DEBUG:visitor_pass.views:M3:commit success - Edit PassID = 23, Pass = my_pass, Expiry Timer = 10
+2018-03-20 12:46:11,382:DEBUG:visitor_pass.views:M3:commit success - EndPass PassID = 23, Pass = my_pass, License Plate = None, Plate Expire = None
+2018-03-20 12:46:15,600:DEBUG:visitor_pass.views:M3:commit success - UsePass PassID = 23, Pass = my_pass, License Plate = 123456, Plate Expire = 2018-03-20 12:56:15.570338 UTC, Email1 = , Email2 = 
+2018-03-20 20:08:17,832:DEBUG:visitor_pass.views:M3:commit success - AutoEndPass PassID = 23, Pass = my_pass, License Plate = None, Plate Expire = None
+2018-03-20 20:08:43,570:DEBUG:visitor_pass.views:M3:commit success - UsePass PassID = 23, Pass = my_pass, License Plate = 123456, Plate Expire = 2018-03-20 20:18:43.519222 UTC, Email1 = , Email2 = 
+2018-03-20 20:26:40,913:DEBUG:visitor_pass.views:M3:commit success - AutoEndPass PassID = 23, Pass = my_pass, License Plate = None, Plate Expire = None
+2018-03-20 20:26:47,950:DEBUG:visitor_pass.views:M3:commit success - UsePass PassID = 23, Pass = my_pass, License Plate = 123456, Plate Expire = 2018-03-20 20:36:47.926786 UTC, Email1 = , Email2 = 
+2018-03-20 20:28:49,832:DEBUG:visitor_pass.views:M3:commit success - EndPass PassID = 23, Pass = my_pass, License Plate = None, Plate Expire = None
+2018-03-20 20:29:04,996:DEBUG:visitor_pass.views:M3:commit success - Edit PassID = 23, Pass = my_pass, Expiry Timer = 1440
+2018-03-20 20:29:18,626:DEBUG:visitor_pass.views:M3:commit success - UsePass PassID = 23, Pass = my_pass, License Plate = 123456, Plate Expire = 2018-03-21 20:29:18.601660 UTC, Email1 = , Email2 = 
+2018-03-20 20:52:55,654:DEBUG:visitor_pass.views:M3:commit success - EndPass PassID = 23, Pass = my_pass, License Plate = None, Plate Expire = None
