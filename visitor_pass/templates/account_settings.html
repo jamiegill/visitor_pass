@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 style="color:black;">
+    Edit Account Details
+</h1>
+<br><br>
+
+<form role="form" method="POST">
+    <div class="form-group">
+        <label for="curr_pswd">Current Password</label>
+        <input type="password" class="form-control" id="curr_pswd" name="curr_pswd" placeholder="Current Password">
+    </div><br>
+    <div class="form-group">
+        <label for="new_pswd">New Password</label>
+        <input type="password" class="form-control" id="new_pswd" name="new_pswd" placeholder="New Password"> 
+    </div>
+    <div class="form-group">
+        <label for="confirm_pswd">Confirm New Password</label>
+        <input type="password" class="form-control" id="confirm_pswd" name="confirm_pswd" placeholder="Confirm New Password"> 
+    </div>
+    <button type="submit" class="btn btn-primary" name="action" value="change_pswd">Submit</button>
+    <br><br>
+    
+    <div class="form-group">
+        <label for="phone">Phone</label>
+        <input type="text" class="form-control" id="phone" name="phone" placeholder={{ user.phone }}></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary" name="action" value="change_phone">Submit</button>
+    <br><br>
+   
+    <div class="form-group">
+        <label for="email">Email</label>
+        <input type="text" class="form-control" id="email" name="email" placeholder={{ user.email }}></textarea>
+    </div>
+        <div class="form-group">
+        <label for="confirm_email">Confirm Email</label>
+        <input type="email" class="form-control" id="confirm_email" name="confirm_email" placeholder="Confirm Email"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary" name="action" value="change_email">Submit</button>
+    <br><br>
+    
+</form>
+{% endblock %}
+

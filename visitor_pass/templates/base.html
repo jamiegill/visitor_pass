@@ -44,8 +44,8 @@
                 </form>
             </div>
             <div class="pull-right btn-group">
-                <form action="{{ url_for('change_pswd_get') }}">
-                    <button type="submit" class="btn btn-default">Change Password</button>
+                <form action="{{ url_for('account_settings_get') }}">
+                    <button type="submit" class="btn btn-default">Account Settings</button>
                 </form>
             </div>    
             <p class="pull-right btn-group logged_in">Logged in as {{ current_user.name }}</p>

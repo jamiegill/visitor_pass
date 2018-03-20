@@ -45,6 +45,7 @@ def pass_seed():
 def adduser():
     name = input("Name: ")
     email = input("Email: ")
+    phone = input("Phone: ")
     building_name = input("building for this user: ")
     building_exists = session.query(Building).filter_by(name=building_name).first()
     if not building_exists:
@@ -60,7 +61,7 @@ def adduser():
         return
     # Create 6 digit password
     password = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(6))
-    user = User(name=name, email=email, privilege=privilege, building_id=building_id,
+    user = User(name=name, email=email, phone=phone, privilege=privilege, building_id=building_id,
                 password=generate_password_hash(password))
     session.add(user)
     session.commit() 

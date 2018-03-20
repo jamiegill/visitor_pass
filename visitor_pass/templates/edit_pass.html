@@ -3,41 +3,39 @@
 
 {% block content %}
 <h1 style="color:black;">
-    Add New Pass
+    Edit Pass: {{ this_pass.pass_id }}</PASS>
 </h1>
-<h2>
-    {{ building.name }} license usage: {{ used_licenses }} / {{ building.total_licenses }}
-</h2>
 
 <p>
-    The following pass will be added to the system:
+    *Please <u>only</u> input text into values that need to be changed<br>
+    The following entry will be edited in the system:
 </p>
 
 
 <form role="form" method="POST">
     <div class="form-group">
         <label for="pass_id">Pass#</label>
-        <input type="text" class="form-control" id="pass_id" name="pass_id" placeholder="Pass name/number" required></textarea>
+        <input type="text" class="form-control" id="pass_id" name="pass_id" placeholder="{{ this_pass.pass_id }}"></textarea>
     </div>
     <div class="form-group">
         <label for="unit">Unit</label>
-        <input type="text" class="form-control" id="unit" name="unit" placeholder="Apartment Number" required></textarea>
+        <input type="text" class="form-control" id="unit" name="unit" placeholder="{{ this_pass.unit }}"></textarea>
     </div>
     <div class="form-group">
         <label for="name">Name</label>
-        <input type="text" class="form-control" id="name" name="name" placeholder="<First> <Last>" required></textarea>
+        <input type="text" class="form-control" id="name" name="name" placeholder="{{ this_pass.name }}"></textarea>
     </div>
     <div class="form-group">
         <label for="phone">Phone</label>
-        <input type="text" class="form-control" id="phone" name="phone" placeholder="Primary Phone Number" required></textarea>
+        <input type="text" class="form-control" id="phone" name="phone" placeholder="{{ this_pass.phone }}"></textarea>
     </div>
     <div class="form-group">
         <label for="email">Email</label>
-        <input type="text" class="form-control" id="email" name="email" placeholder="Email Address" required></textarea>
+        <input type="email" class="form-control" id="email" name="email" placeholder="{{ this_pass.email }}"></textarea>
     </div>
         <div class="form-group">
         <label for="maxtime">Expiry Timer</label>
-        <input type="integer" class="form-control" id="maxtime" name="maxtime" placeholder="Expiry Time (minutes)" required></textarea>
+        <input type="integer" class="form-control" id="maxtime" name="maxtime" placeholder="{{ this_pass.maxtime }} (minutes)"></textarea>
     </div>
     <p>
         Pass#: this is the unique name/number which identifies a parking pass<br>

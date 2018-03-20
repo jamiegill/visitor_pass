@@ -1,18 +1,22 @@
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Text, DateTime, create_engine, ForeignKey, or_
+from sqlalchemy import Column, Integer, String, Text, DateTime, create_engine, ForeignKey
 from flask_login import UserMixin
 import datetime
 
 from . import app
+
+import flask.ext.whooshalchemy as wa
 
 engine = create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
 session = Session()
 
+
 class Building(Base):
     __tablename__ = "buildings"
+    __searchable__ = ['name', 'address', 'contact_name', 'contact_phone']
     id = Column(Integer, primary_key=True)
     name = Column(String(128), unique=True, nullable=False)
     address = Column(String(1024))
@@ -26,9 +30,10 @@ class Building(Base):
     
     visitor_pass = relationship("Pass", backref="building")
     privilege_user = relationship("User", backref="building")
-    
+wa.whoosh_index(app, Building)
 class Pass(Base):
     __tablename__ = "passes"
+    __searchable__ = ['unit', 'pass_id', 'email_1', 'email_2']
     id = Column(Integer, primary_key=True)
     unit = Column(String(128))
     pass_id = Column(String(128), nullable=False)
@@ -42,7 +47,7 @@ class Pass(Base):
     building_id = Column(Integer, ForeignKey('buildings.id'), nullable=False)
     resident_id = Column(Integer, ForeignKey('users.id'))
 
-    
+wa.whoosh_index(app, Pass)    
 class User(Base, UserMixin):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True)

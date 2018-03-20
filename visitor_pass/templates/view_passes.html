@@ -5,12 +5,29 @@
 <div class="btn-group pull-left">
     <h2> Building Name: {{ building.name }}  </h2>
     <p class = "pull-left"> timezone = {{ building.timezone }}</p>
-
+<br><br>
 {% if access_priv == "admin" %}
 <form action="{{ url_for('add_pass_get', building_id=building.id) }}">
     <button type="submit" class="btn btn-primary pull-left">Add New Pass</button>
 </form>
 {% endif %}
+
+
+
+<form action="{{ url_for('get_passes', building_id=building.id) }}",  method="POST">
+    <div class="search_class" style="float:right">
+        <input  type="text" class="form-control" id="search" name="search" placeholder={{ search_string }}></textarea> 
+    </div>
+    <div class="search_class" style="float:right">
+        <button type="submit" class="btn btn-primary pull-right">Search</button>
+    </div>
+    
+</form>
+
+
+
+
+
 <br><br><br><br>
 </div>
 
@@ -23,11 +40,21 @@
         {% endif %}
         <td><b>License Plate</b></td>
         <td><b>Expires</b></td>
+        <td><b>Name</b></td>
+        <td><b>Phone</b></td>
+        <td><b>Email</b></td>
         <td></td>
     </tr>
 {% for pass in passes %}
 {{ macros.render_entry(pass, access_priv, building) }}
 {% endfor %}
 </table>
+
+{% if search_string|length > 0 %}
+<br><br><br><br>
+<div style="float:left">
+    <font color="blue"> *click "Search" again to clear filter</font>
+</div>
+{% endif %}
 
 {% endblock %}
