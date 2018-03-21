@@ -60,6 +60,7 @@ def get_root():
 @login_required
 def get_passes(building_id):
 
+    
 
     search_string = ""
     if request.method == 'POST':
