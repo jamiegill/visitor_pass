@@ -146,7 +146,7 @@ def add_pass_post(building_id):
     try:
         session.query(User).filter(User.email.like(request.form["email"])).first().email
         flash ("Adding pass to existing email: {}".format(request.form["email"]), "info")
-
+        added_userid=session.query(User).filter(User.email.like(request.form["email"])).first().id
         
     except AttributeError:
         # Add new email address to the DB
@@ -166,11 +166,11 @@ def add_pass_post(building_id):
         flash ("Pass and user created - {} has been emailed with the Username and Password specified below".format(request.form["email"]), "success")
         flash ("Username: {}   |   Password: {}".format(request.form["email"], password), "info")
         email_address_add(building_name,request.form["name"], request.form["email"], password)
+        # Once email is added to DB, get the latest "added userid" and use this for next DB addition
+        added_userid=session.query(User.id).order_by(User.id.desc()).first()[0]
     
     
-    
-    # Once email is added to DB, get the latest "added userid" and use this for next DB addition
-    added_userid=session.query(User.id).order_by(User.id.desc()).first()[0]
+
     
     # Add a pass to the DB 
     add_pass = Pass(

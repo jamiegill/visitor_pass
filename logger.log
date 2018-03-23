@@ -258,3 +258,22 @@
 2018-03-23 01:57:34,650:DEBUG:visitor_pass.views:M3:commit success - Edit PassID = 52 Pass = 0000, Resident ID = 89, Email = sdflkjfsdlj@gmail.com
 2018-03-23 01:57:34,690:DEBUG:visitor_pass.views:M3:commit success - Delete User = 88, Email = klfsdjlkfjsdlkjf@lfkjsdf.com due to 0 passes assigned to User
 2018-03-23 01:57:48,849:DEBUG:visitor_pass.views:M3:commit success - Edit PassID = 52, Pass = 00001
+2018-03-23 02:06:29,203:DEBUG:visitor_pass.views:M3:commit success - Add New Pass = 1234, Expiry Timer = 1440, Unit = 711, ResID = 89
+2018-03-23 02:20:28,823:DEBUG:visitor_pass.views:M3:commit success - Add New Pass = 7896, Expiry Timer = 12344, Unit = 7896, ResID = 10
+2018-03-23 02:24:35,608:DEBUG:visitor_pass.views:M3:commit success - Add New Pass = 876, Expiry Timer = 1440, Unit = 234, ResID = 67
+2018-03-23 02:24:56,126:DEBUG:visitor_pass.views:M3:commit success - Add New Email = new_email@gmail.com, Name = new_email, Phone = new_email
+2018-03-23 02:24:57,908:DEBUG:visitor_pass.views:M3:commit success - Add New Pass = new_email, Expiry Timer = 1440, Unit = new_email, ResID = 90
+2018-03-23 02:26:11,857:DEBUG:visitor_pass.views:M3:commit success - Edit PassID = 54 Pass = 7896, Resident ID = 67, Email = jamiegill.03@gmail.com
+2018-03-23 02:26:11,914:DEBUG:visitor_pass.views:M3:commit success - Delete User = 10, Email = scarreira10@hotmail.com due to 0 passes assigned to User
+2018-03-23 02:27:33,450:DEBUG:visitor_pass.views:M3:commit success - Edit New Email = hellomoto@hello.com, Name = 1234, Phone = 1234
+2018-03-23 02:27:34,981:DEBUG:visitor_pass.views:M3:commit success - Edit PassID = 54 Pass = 7896, Resident ID = 91, Email = hellomoto@hello.com
+2018-03-23 02:28:30,495:DEBUG:visitor_pass.views:M3:commit success - Edit UserID = 91, Email = hellomoto@hello.com, Name = 12345
+2018-03-23 02:28:41,972:DEBUG:visitor_pass.views:M3:commit success - Edit New Email = hihihihihihi@gmail.com, Name = 12345, Phone = 1234
+2018-03-23 02:28:43,304:DEBUG:visitor_pass.views:M3:commit success - Edit PassID = 54 Pass = 7896, Resident ID = 92, Email = hihihihihihi@gmail.com
+2018-03-23 02:28:43,342:DEBUG:visitor_pass.views:M3:commit success - Delete User = 91, Email = hellomoto@hello.com due to 0 passes assigned to User
+2018-03-23 02:29:57,881:DEBUG:visitor_pass.views:M3:commit success - Change PassID = 3, Email = new_email@newemail.com
+2018-03-23 02:44:10,949:DEBUG:visitor_pass.views:M3:commit success - Change UserID = 93, Email = m4@gmail.com, Password = pbkdf2:sha1:1000$hBbTYSPJ$6e67df74b21848274f07d76be697fba2a40579d9
+2018-03-23 02:52:32,058:DEBUG:visitor_pass.views:M3:commit success - SUPERUSER_COMMIT - 
+2018-03-23 02:59:02,719:DEBUG:visitor_pass.views:M3:commit success - ADMIN_COMMIT - adduser: name= tester email=test@tester.com phone=fsdlkjflkjsd privilege=admin building_id=1 password=XZlp74
+2018-03-23 03:48:16,177:DEBUG:visitor_pass.views:M3:commit success - ADMIN_COMMIT - adduser: name=m3admin@gmail.com email=m3admin@gmail.com phone=111 111 1111 privilege=admin building_id=1 password=iou6S8
+2018-03-23 03:49:04,012:DEBUG:visitor_pass.views:M3:commit success - Change UserID = 1, Email = m3admin@gmail.com, Password = pbkdf2:sha1:1000$TLls2uS9$f2901b897d00f08afa4ad3fab53e8a0d787768f1

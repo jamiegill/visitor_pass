@@ -6,6 +6,7 @@ from getpass import getpass
 from werkzeug.security import generate_password_hash
 import string
 import random
+from visitor_pass.views import db_commit_check
 
 from visitor_pass.database import Base, session, Building, Pass, User
 
@@ -15,31 +16,6 @@ manager = Manager(app)
 def run():
     port = int(os.environ.get('PORT', 8080))
     app.run(host="0.0.0.0", port=port)
-    
-@manager.command
-def building_seed():
-    building1 = Building(name="M3", used_licenses=0,
-                        address="1188 Pinetree Way,Coquitlam, BC, Canada", total_licenses=3)
-    
-    building2 = Building(name="QuayWest II", used_licenses=0,
-                        address="1067 Marinaside Crescent,Vancouver, BC, Canada",
-                        total_licenses=100, contact_name="Tom Dirsh", contact_phone="604 111 1111")
-    
-    
-    building3 = Building(name="M2", used_licenses=0,
-    address="3008 Glen Drive, Coquitlam, BC, Canada", total_licenses=10)
-    session.add_all([building1, building2, building3])
-    session.commit()
-
-@manager.command
-def pass_seed():
-    pass1 = Pass(pass_id="243", maxtime=1440, building_id=1,
-    license_plate="145NEW", email_1="jamiegill.03@gmail.com", resident_id=1)
-    pass2 = Pass(pass_id="253", maxtime=1440, building_id=1)
-    pass3 = Pass(pass_id="A2D345", maxtime=2880, building_id=2,
-    license_plate="456QWE", email_1="test@gmail.com")
-    session.add_all([pass1, pass2, pass3])
-    session.commit()
     
 @manager.command
 def adduser():
@@ -64,9 +40,12 @@ def adduser():
     user = User(name=name, email=email, phone=phone, privilege=privilege, building_id=building_id,
                 password=generate_password_hash(password))
     session.add(user)
-    session.commit() 
+    db_commit_check(building_id, "ADMIN_COMMIT - adduser: name={} email={} phone={} privilege={} building_id={} password={}"
+        .format(name, email, phone, privilege, building_id, password)) 
+
     print("user added. Auto-generated password is {}".format(password))
-    
+ 
+@manager.command    
 def addbuilding():
         name = input("Building name: ")
         if session.query(Building).filter_by(name=name).first():
@@ -79,11 +58,11 @@ def addbuilding():
         contact_phone = input("Building contact phone number: ")
         building = Building(name=name, address=address, total_licenses=total_licenses,
                             contact_name=contact_name, contact_phone=contact_phone,
-                            used_licenses=0, timezone=timezone
-        )
+                            used_licenses=0, timezone=timezone)
         session.add(building)
+        #Be careful with this commit, there is no check for this (because building_id isnt' created yet)
         session.commit()
-        
+
 class DB(object):
     def __init__(self, metadata):
         self.metadata = metadata
