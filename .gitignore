@@ -1,4 +1,5 @@
 visitor_pass/config.py
+visitor_pass/__pycache__/
 env/
 logs/
 db/
