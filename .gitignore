@@ -1,1 +1,4 @@
 visitor_pass/config.py
+env/
+logs/
+db/
