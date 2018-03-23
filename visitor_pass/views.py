@@ -5,6 +5,8 @@ import random
 import datetime
 from . import app
 from .database import session, Pass, Building, User
+from .send_email import *
+from .filters import *
 from sqlalchemy import or_
 from werkzeug.security import generate_password_hash, check_password_hash
 import string
@@ -65,8 +67,7 @@ def get_passes(building_id):
     search_string = ""
     if request.method == 'POST':
         search_string = request.form["search"]
-    search_var = "%{}%".format(search_string)    
-    print(search_var)
+    search_var = "%{}%".format(search_string)
             
     
     """ List of passes for a building """
@@ -131,6 +132,7 @@ def add_pass_get(building_id):
 @app.route("/passes/<int:building_id>/add", methods=["POST"])
 def add_pass_post(building_id):
     # Check for duplicate pass_id
+    
     try:
         building=session.query(Pass).filter(Pass.building_id == building_id)
         building.filter(Pass.pass_id.like(request.form["pass_id"])).first().pass_id
@@ -144,6 +146,7 @@ def add_pass_post(building_id):
     try:
         session.query(User).filter(User.email.like(request.form["email"])).first().email
         flash ("Adding pass to existing email: {}".format(request.form["email"]), "info")
+
         
     except AttributeError:
         # Add new email address to the DB
@@ -159,13 +162,17 @@ def add_pass_post(building_id):
         )
         session.add(add_email)
         db_commit_check(building_id,"Add New Email = {}, Name = {}, Phone = {}".format(request.form["email"], request.form["name"], request.form["phone"]))
+        building_name=session.query(Building).filter(Building.id == building_id).first().name
+        flash ("Pass and user created - {} has been emailed with the Username and Password specified below".format(request.form["email"]), "success")
+        flash ("Username: {}   |   Password: {}".format(request.form["email"], password), "info")
+        email_address_add(building_name,request.form["name"], request.form["email"], password)
     
     
     
     # Once email is added to DB, get the latest "added userid" and use this for next DB addition
     added_userid=session.query(User.id).order_by(User.id.desc()).first()[0]
     
-    # Add a pass to the DB and increase licenses used counter 
+    # Add a pass to the DB 
     add_pass = Pass(
         pass_id=request.form["pass_id"],
         maxtime=request.form["maxtime"],
@@ -176,11 +183,10 @@ def add_pass_post(building_id):
     building = session.query(Building).filter(Building.id == building_id).first()
     session.add_all([add_pass, building])
     
-    db_commit_check(building_id,"Add New Pass = {}, Expiry Timer = {}, Unit = {}".format(request.form["pass_id"],
-    request.form["maxtime"], request.form["unit"]))
+    db_commit_check(building_id,"Add New Pass = {}, Expiry Timer = {}, Unit = {}, ResID = {}".format(request.form["pass_id"],
+    request.form["maxtime"], request.form["unit"], added_userid))
     
-    flash ("Pass added and user added - please record credentials below and supply them to the resident".format(request.form["email"],password), "success")
-    flash ("Username: {}   |   Password: {}".format(request.form["email"], password), "info")
+    
     return redirect(url_for("get_passes", building_id=building_id))
 
 @app.route("/passes/<int:pass_id>/edit", methods=["GET"])
@@ -270,6 +276,10 @@ def edit_pass_post(pass_id):
             )
             session.add(add_email)
             db_commit_check(building_id,"Edit New Email = {}, Name = {}, Phone = {}".format(email, edit_user.name, edit_user.phone))
+            building_name=session.query(Building).filter(Building.id == building_id).first().name
+            email_address_add(building_name,request.form["name"], request.form["email"], password)
+            flash ("{} has been emailed with the Username and Password specified below".format(request.form["email"]), "success")
+            flash ("Username: {}   |   Password: {}".format(request.form["email"], password), "info")
         
         new_email = session.query(User).filter(User.email.like(request.form["email"])).first()    
         new_email_id = new_email.id
@@ -440,6 +450,9 @@ def customer_use_pass_get(pass_id):
 def customer_use_pass_post(pass_id):
     
     building_id = session.query(Pass).filter_by(id=pass_id).first().building_id
+    building_data = session.query(Building).filter_by(id=building_id).first()
+    building_name = building_data.name
+    building_timezone = building_data.timezone
     # Check if license plate has already been entered
     try:
         session.query(Pass).filter(Pass.license_plate.like(request.form["license_plate"])).first().license_plate
@@ -450,8 +463,16 @@ def customer_use_pass_post(pass_id):
     
     # update license plate and license plate expiry
     pass_data = session.query(Pass).filter(Pass.id == pass_id).first()
+    pass_unit = pass_data.unit
+    pass_num = pass_data.pass_id
     pass_data.license_plate = request.form["license_plate"]
+    pass_license_plate = pass_data.license_plate
     pass_data.plate_expire = datetime.datetime.now() + datetime.timedelta(minutes = pass_data.maxtime)
+    pass_plate_expire = dateformat(pass_data.plate_expire, building_timezone)
+
+    # Get user info for this pass too
+    user_name = session.query(User).filter(User.id == pass_data.resident_id).first().name
+
     # if email address(es) are filled in, then submit to DB also
     email1 = request.form["email1"]
     email2 = request.form["email2"]
@@ -468,6 +489,7 @@ def customer_use_pass_post(pass_id):
     # Get info about this pass' user
     pass_user_id = pass_data.resident_id
     flash ("Parking pass in effect", "success")
+    email_use_pass(building_name, user_name, pass_unit, pass_num, pass_license_plate, pass_plate_expire)
     return redirect(url_for("customer_pass_get", user_id=pass_user_id))
     
 @app.route("/passes/<int:pass_id>/cust_end_pass", methods=["GET"])
@@ -497,8 +519,22 @@ def customer_end_pass_get(pass_id):
 def customer_end_pass_post(pass_id):
     
     building_id = session.query(Pass).filter_by(id=pass_id).first().building_id
+    building_data = session.query(Building).filter_by(id=building_id).first()
+    building_name = building_data.name
+    building_timezone = building_data.timezone
     # Get info about this pass
     pass_data = session.query(Pass).filter(Pass.id == pass_id).first()
+    pass_unit = pass_data.unit
+    pass_num = pass_data.pass_id
+    pass_license_plate = pass_data.license_plate
+
+    curr_time=datetime.datetime.now()
+    pass_plate_expire = dateformat(curr_time, building_timezone) + " - owner/tenant has ended pass"
+    # Get user info for this pass too
+    user_name = session.query(User).filter(User.id == pass_data.resident_id).first().name
+
+
+    # remove pass entries
     pass_data.license_plate = None
     pass_data.plate_expire = None
     pass_data.email_1 = None
@@ -509,6 +545,7 @@ def customer_end_pass_post(pass_id):
     user_id = pass_data.resident_id
     
     flash ("Parking ended", "info")
+    email_end_pass(building_name, user_name, pass_unit, pass_num, pass_license_plate, pass_plate_expire)
     return redirect(url_for("customer_pass_get", user_id=user_id))
 
 @app.route("/account_settings", methods=["GET"])

@@ -11,6 +11,5 @@ def dateformat(date, timezone):
     utc = pytz.timezone('UTC')
     tz_aware_dt = utc.localize(date)
     local_dt = tz_aware_dt.astimezone(tz)
-    
-    print(local_dt.strftime('%a %b %d %I:%M:%S %p %Y'))    
+        
     return local_dt.strftime('%a %b %d %I:%M:%S %p %Y')
