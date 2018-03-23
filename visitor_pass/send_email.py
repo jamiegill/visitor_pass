@@ -6,7 +6,7 @@ from email.mime.image import MIMEImage
 
 from . import app
 
-def send_email(html_email_contents, email_subject):
+def send_email(html_email_contents, email_subject, email_dest):
 
 	# enable/disable email functionality globally
 
@@ -17,7 +17,7 @@ def send_email(html_email_contents, email_subject):
 	elif global_email_enabled == "enable":
 
 		from_email = app.config["SMTP_ADDRESS"]
-		to_email = "jamiegill.03@gmail.com"
+		to_email = email_dest
 
 		msg = MIMEMultipart('alternative')
 		msg['Subject'] = email_subject
@@ -50,7 +50,7 @@ def send_email(html_email_contents, email_subject):
 		mail.sendmail(from_email,to_email,msg.as_string())
 		mail.close()
 
-def email_use_pass(building_name, user_name, pass_unit, pass_num, pass_license_plate, pass_plate_expire):
+def email_use_pass(building_name, user_name, pass_unit, pass_num, pass_license_plate, pass_plate_expire, email_dest):
 
 	email_subject = "VPass Portal - Visitor Pass Currently In Use"
 
@@ -62,9 +62,9 @@ def email_use_pass(building_name, user_name, pass_unit, pass_num, pass_license_p
 															pass_license_plate=pass_license_plate,
 															pass_plate_expire=pass_plate_expire)
 		
-	send_email(html_email_contents, email_subject)
+	send_email(html_email_contents, email_subject, email_dest)
 
-def email_end_pass(building_name, user_name, pass_unit, pass_num, pass_license_plate, pass_plate_expire):
+def email_end_pass(building_name, user_name, pass_unit, pass_num, pass_license_plate, pass_plate_expire, email_dest):
 
 	email_subject = "VPass Portal - Visitor Pass Expired"
 
@@ -76,9 +76,9 @@ def email_end_pass(building_name, user_name, pass_unit, pass_num, pass_license_p
 															pass_license_plate=pass_license_plate,
 															pass_plate_expire=pass_plate_expire)
 		
-	send_email(html_email_contents, email_subject)
+	send_email(html_email_contents, email_subject, email_dest)
 
-def email_address_add(building_name, user_email, user_name, user_password):
+def email_address_add(building_name, user_name, user_email, user_password):
 
 	email_subject = "Welcome to VPass Portal, {}".format(user_name)
 
@@ -88,5 +88,4 @@ def email_address_add(building_name, user_email, user_name, user_password):
 																user_name=user_name,
 																user_password=user_password,
 																)
-		
-	send_email(html_email_contents, email_subject)
+	send_email(html_email_contents, email_subject, user_email)

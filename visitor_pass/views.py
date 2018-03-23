@@ -471,7 +471,9 @@ def customer_use_pass_post(pass_id):
     pass_plate_expire = dateformat(pass_data.plate_expire, building_timezone)
 
     # Get user info for this pass too
-    user_name = session.query(User).filter(User.id == pass_data.resident_id).first().name
+    user_data = session.query(User).filter(User.id == pass_data.resident_id).first()
+    user_name = user_data.name
+    email_dest = user_data.email
 
     # if email address(es) are filled in, then submit to DB also
     email1 = request.form["email1"]
@@ -489,7 +491,7 @@ def customer_use_pass_post(pass_id):
     # Get info about this pass' user
     pass_user_id = pass_data.resident_id
     flash ("Parking pass in effect", "success")
-    email_use_pass(building_name, user_name, pass_unit, pass_num, pass_license_plate, pass_plate_expire)
+    email_use_pass(building_name, user_name, pass_unit, pass_num, pass_license_plate, pass_plate_expire, email_dest)
     return redirect(url_for("customer_pass_get", user_id=pass_user_id))
     
 @app.route("/passes/<int:pass_id>/cust_end_pass", methods=["GET"])
@@ -531,7 +533,9 @@ def customer_end_pass_post(pass_id):
     curr_time=datetime.datetime.now()
     pass_plate_expire = dateformat(curr_time, building_timezone) + " - owner/tenant has ended pass"
     # Get user info for this pass too
-    user_name = session.query(User).filter(User.id == pass_data.resident_id).first().name
+    user_data = session.query(User).filter(User.id == pass_data.resident_id).first()
+    user_name = user_data.name
+    email_dest = user_data.email
 
 
     # remove pass entries
@@ -545,7 +549,7 @@ def customer_end_pass_post(pass_id):
     user_id = pass_data.resident_id
     
     flash ("Parking ended", "info")
-    email_end_pass(building_name, user_name, pass_unit, pass_num, pass_license_plate, pass_plate_expire)
+    email_end_pass(building_name, user_name, pass_unit, pass_num, pass_license_plate, pass_plate_expire, email_dest)
     return redirect(url_for("customer_pass_get", user_id=user_id))
 
 @app.route("/account_settings", methods=["GET"])
@@ -610,7 +614,7 @@ def account_settings_post():
         except AttributeError:
             user.email = new_email
             session.add(user)
-            db_commit_check(building_id,"Change PassID = {}, Email = {}".format(current_user.id, user.email))
+            db_commit_check(building_id,"Change UserID = {}, Email = {}".format(current_user.id, user.email))
             flash("Email address has been changed successfully", "success")
             flash("New username: {}".format(request.form["email"]), "success")
             return redirect(url_for("logout_get"))
