@@ -21,7 +21,7 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 
-def db_commit_check(building_id, field_update):
+def db_commit_check(building_id, log_userid, field_update):
     try:
         #session.flush()
         session.commit()
@@ -33,7 +33,7 @@ def db_commit_check(building_id, field_update):
     
     building_id = session.query(Building).filter(Building.id == building_id).first()
     building_name = building_id.name
-    logger.debug("{}:{}{}".format(building_name, commit_status, field_update))
+    logger.debug("{}:uid {}:{}{}".format(building_name, log_userid, commit_status, field_update))
 
 def plate_datetime(passes):
     # See if timestamp has expired
@@ -50,7 +50,7 @@ def plate_datetime(passes):
             pass_record.email_1 = None
             pass_record.email_2 = None
             session.add(pass_record)
-            db_commit_check(pass_record.building_id,"AutoEndPass PassID = {}, Pass = {}, License Plate = {}, Plate Expire = {}".format(pass_record.id, pass_record.pass_id, pass_record.license_plate, pass_record.plate_expire))
+            db_commit_check(pass_record.building_id,"sys","AutoEndPass PassID = {}, Pass = {}, License Plate = {}, Plate Expire = {}".format(pass_record.id, pass_record.pass_id, pass_record.license_plate, pass_record.plate_expire))
 
 @app.route("/")
 @login_required
@@ -161,7 +161,7 @@ def add_pass_post(building_id):
         building_id=building_id
         )
         session.add(add_email)
-        db_commit_check(building_id,"Add New Email = {}, Name = {}, Phone = {}".format(request.form["email"], request.form["name"], request.form["phone"]))
+        db_commit_check(building_id,current_user.id,"Add New Email = {}, Name = {}, Phone = {}".format(request.form["email"], request.form["name"], request.form["phone"]))
         building_name=session.query(Building).filter(Building.id == building_id).first().name
         flash ("Pass and user created - {} has been emailed with the Username and Password specified below".format(request.form["email"]), "success")
         flash ("Username: {}   |   Password: {}".format(request.form["email"], password), "info")
@@ -183,7 +183,7 @@ def add_pass_post(building_id):
     building = session.query(Building).filter(Building.id == building_id).first()
     session.add_all([add_pass, building])
     
-    db_commit_check(building_id,"Add New Pass = {}, Expiry Timer = {}, Unit = {}, ResID = {}".format(request.form["pass_id"],
+    db_commit_check(building_id,current_user.id,"Add New Pass = {}, Expiry Timer = {}, Unit = {}, ResID = {}".format(request.form["pass_id"],
     request.form["maxtime"], request.form["unit"], added_userid))
     
     
@@ -229,7 +229,7 @@ def edit_pass_post(pass_id):
             edit_pass_num = edit_pass
             edit_pass_num.pass_id = pass_num
             session.add(edit_pass_num)
-            db_commit_check(building_id,"Edit PassID = {}, Pass = {}".format(pass_id, pass_num))
+            db_commit_check(building_id,current_user.id,"Edit PassID = {}, Pass = {}".format(pass_id, pass_num))
             pass_list.append("Pass Number = {}".format(pass_num))
             
         
@@ -237,14 +237,14 @@ def edit_pass_post(pass_id):
         edit_pass_unit = edit_pass
         edit_pass_unit.unit = unit
         session.add(edit_pass_unit)
-        db_commit_check(building_id,"Edit PassID = {}, Pass = {}, Unit = {}".format(pass_id,edit_pass_unit.pass_id, unit))
+        db_commit_check(building_id,current_user.id,"Edit PassID = {}, Pass = {}, Unit = {}".format(pass_id,edit_pass_unit.pass_id, unit))
         pass_list.append("Unit = {}".format(unit))
         
     if len(maxtime) > 0 and edit_pass.maxtime != maxtime:
         edit_pass_maxtime = edit_pass
         edit_pass_maxtime.maxtime = maxtime
         session.add(edit_pass_maxtime)
-        db_commit_check(building_id,"Edit PassID = {}, Pass = {}, Expiry Timer = {}".format(pass_id, edit_pass_maxtime.pass_id, maxtime))
+        db_commit_check(building_id,current_user.id,"Edit PassID = {}, Pass = {}, Expiry Timer = {}".format(pass_id, edit_pass_maxtime.pass_id, maxtime))
         pass_list.append("Expiry Timer = {}".format(maxtime))
         
     # Make changes to items in the "users" DB table
@@ -268,6 +268,7 @@ def edit_pass_post(pass_id):
             password = []
             password = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(6))
             add_email = User(
+            building_id = building_id,
             email=request.form["email"],
             name=edit_user.name,
             phone=edit_user.phone,
@@ -275,7 +276,7 @@ def edit_pass_post(pass_id):
             password=generate_password_hash(password),
             )
             session.add(add_email)
-            db_commit_check(building_id,"Edit New Email = {}, Name = {}, Phone = {}".format(email, edit_user.name, edit_user.phone))
+            db_commit_check(building_id,current_user.id,"Edit New Email = {}, Name = {}, Phone = {}".format(email, edit_user.name, edit_user.phone))
             building_name=session.query(Building).filter(Building.id == building_id).first().name
             email_address_add(building_name,request.form["name"], request.form["email"], password)
             flash ("{} has been emailed with the Username and Password specified below".format(request.form["email"]), "success")
@@ -286,14 +287,14 @@ def edit_pass_post(pass_id):
         edit_pass_resident_id = edit_pass
         edit_pass_resident_id.resident_id = new_email_id
         session.add(edit_pass_resident_id)
-        db_commit_check(building_id,"Edit PassID = {} Pass = {}, Resident ID = {}, Email = {}".format(pass_id, edit_pass.pass_id, new_email_id, new_email.email))
+        db_commit_check(building_id,current_user.id,"Edit PassID = {} Pass = {}, Resident ID = {}, Email = {}".format(pass_id, edit_pass.pass_id, new_email_id, new_email.email))
         user_list.append("Email = {}".format(email))
         # Check the PREVIOUS email address and remove if NO passes are assigned to that UserID
         pass_count = session.query(Pass).filter(Pass.resident_id == prev_user.id).count()
         print(pass_count)
         if pass_count == 0:
             session.delete(prev_user)
-            db_commit_check(building_id,"Delete User = {}, Email = {} due to 0 passes assigned to User".format(prev_user.id, prev_user.email))
+            db_commit_check(building_id,current_user.id,"Delete User = {}, Email = {} due to 0 passes assigned to User".format(prev_user.id, prev_user.email))
     
     #Query current pass and user details (in case the resident ID has changed from the duplicate email check above (ie. try statement))
     edit_pass = session.query(Pass).filter(Pass.id == pass_id).first()
@@ -304,14 +305,14 @@ def edit_pass_post(pass_id):
         edit_user_name = edit_user
         edit_user_name.name = name
         session.add(edit_user_name)
-        db_commit_check(building_id,"Edit UserID = {}, Email = {}, Name = {}".format(user_id, edit_user_name.email, name))
+        db_commit_check(building_id,current_user.id,"Edit UserID = {}, Email = {}, Name = {}".format(user_id, edit_user_name.email, name))
         user_list.append("Name = {}".format(name))
 
     if len(phone) > 0 and edit_user.phone !=phone:
         edit_user_phone = edit_user
         edit_user_phone.phone = phone
         session.add(edit_user_phone)
-        db_commit_check(building_id,"Edit UserID = {}, Email = {}, Phone = {}".format(user_id, edit_user_phone.email, phone))
+        db_commit_check(building_id,current_user.id,"Edit UserID = {}, Email = {}, Phone = {}".format(user_id, edit_user_phone.email, phone))
         user_list.append("Phone = {}".format(phone))
       
     if len(pass_list) > 0:
@@ -387,7 +388,7 @@ def delete_pass_post(pass_id):
     building_id = pass_data.building_id
     building = session.query(Building).filter(Building.id == building_id).first()
     session.add(building)
-    db_commit_check(building_id,"Delete PassID = {}, Pass = {}".format(pass_id, pass_data.pass_id))
+    db_commit_check(building_id,current_user.id,"Delete PassID = {}, Pass = {}".format(pass_id, pass_data.pass_id))
     
     
     # Delete the user if only 1 instance is found in the passes DB
@@ -395,7 +396,7 @@ def delete_pass_post(pass_id):
     if user_instances == 0:
         user_data = session.query(User).filter(User.id == pass_user_id).first()
         session.delete(user_data)
-        db_commit_check(building_id,"Delete User = {}, Email = {} due to Pass = {} deletion".format(pass_user_id,user_data.email, pass_id))
+        db_commit_check(building_id,current_user.id,"Delete User = {}, Email = {} due to Pass = {} deletion".format(pass_user_id,user_data.email, pass_id))
         flash ("Pass and User deleted", "info")
     else:    
         flash ("Pass deleted", "info")
@@ -449,6 +450,14 @@ def customer_use_pass_get(pass_id):
 @app.route("/passes/<int:pass_id>/cust_use_pass", methods=["POST"])
 def customer_use_pass_post(pass_id):
     
+    #Function for sending emails when a pass is in use
+    def email_use_pass_func(email_dest):
+        email_use_pass(building_name, user_name, pass_unit, pass_num, pass_license_plate, pass_plate_expire, email_dest)
+        field_update = "Pass_num = {}, License_Plate = {}, Expiry Time = {}, Email_Dest = {}".format(pass_num, pass_license_plate, pass_plate_expire, email_dest)
+        logger.debug("{}:uid {}:{}{}".format(building_name, current_user.id, "email trigger - ", field_update))
+
+
+
     building_id = session.query(Pass).filter_by(id=pass_id).first().building_id
     building_data = session.query(Building).filter_by(id=building_id).first()
     building_name = building_data.name
@@ -481,17 +490,21 @@ def customer_use_pass_post(pass_id):
     
     if len(email1) > 0:
         pass_data.email_1 = email1
+        email_use_pass_func(email1)
     if len(email2) > 0:
         pass_data.email_2 = email2
+        email_use_pass_func(email2)
     session.add(pass_data)
     
-    db_commit_check(building_id,"UsePass PassID = {}, Pass = {}, License Plate = {}, Plate Expire = {} UTC, Email1 = {}, Email2 = {}".format
+    db_commit_check(building_id,current_user.id,"UsePass PassID = {}, Pass = {}, License Plate = {}, Plate Expire = {} UTC, Email1 = {}, Email2 = {}".format
     (pass_id, pass_data.pass_id, pass_data.license_plate, pass_data.plate_expire, email1, email2))
     
     # Get info about this pass' user
     pass_user_id = pass_data.resident_id
     flash ("Parking pass in effect", "success")
-    email_use_pass(building_name, user_name, pass_unit, pass_num, pass_license_plate, pass_plate_expire, email_dest)
+
+    email_use_pass_func(email_dest)
+
     return redirect(url_for("customer_pass_get", user_id=pass_user_id))
     
 @app.route("/passes/<int:pass_id>/cust_end_pass", methods=["GET"])
@@ -544,7 +557,8 @@ def customer_end_pass_post(pass_id):
     pass_data.email_1 = None
     pass_data.email_2 = None
     session.add(pass_data)
-    db_commit_check(building_id,"EndPass PassID = {}, Pass = {}, License Plate = {}, Plate Expire = {}".format(pass_id, pass_data.pass_id, pass_data.license_plate, pass_data.plate_expire))
+
+    db_commit_check(building_id,current_user.id,"EndPass PassID = {}, Pass = {}, License Plate = {}, Plate Expire = {}".format(pass_id, pass_data.pass_id, pass_data.license_plate, pass_data.plate_expire))
     
     user_id = pass_data.resident_id
     
@@ -582,7 +596,7 @@ def account_settings_post():
     
         user.password = generate_password_hash(new_pswd)
         session.add(user)
-        db_commit_check(building_id,"Change UserID = {}, Email = {}, Password = {}".format(current_user.id, user.email, user.password))
+        db_commit_check(building_id,current_user.id,"Change UserID = {}, Email = {}, Password = {}".format(current_user.id, user.email, user.password))
         flash("Password has been changed successfully", "success")
         return redirect(url_for("logout_get"))
         
@@ -591,7 +605,7 @@ def account_settings_post():
         new_phone = request.form["phone"]
         user.phone = new_phone
         session.add(user)
-        db_commit_check(building_id,"Change UserID = {}, Email = {}, Phone = {}".format(current_user.id, user.email, new_phone))
+        db_commit_check(building_id,current_user.id,"Change UserID = {}, Email = {}, Phone = {}".format(current_user.id, user.email, new_phone))
         flash("Phone number has been changed successfully", "success")
         return redirect(url_for("account_settings_get"))
             
@@ -614,7 +628,7 @@ def account_settings_post():
         except AttributeError:
             user.email = new_email
             session.add(user)
-            db_commit_check(building_id,"Change UserID = {}, Email = {}".format(current_user.id, user.email))
+            db_commit_check(building_id,current_user.id,"Change UserID = {}, Email = {}".format(current_user.id, user.email))
             flash("Email address has been changed successfully", "success")
             flash("New username: {}".format(request.form["email"]), "success")
             return redirect(url_for("logout_get"))

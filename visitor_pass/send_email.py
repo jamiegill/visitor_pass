@@ -66,7 +66,7 @@ def email_use_pass(building_name, user_name, pass_unit, pass_num, pass_license_p
 
 def email_end_pass(building_name, user_name, pass_unit, pass_num, pass_license_plate, pass_plate_expire, email_dest):
 
-	email_subject = "VPass Portal - Visitor Pass Expired"
+	email_subject = "VPass Portal - Visitor Pass Ended"
 
 	with open ('./visitor_pass/templates/email_end_pass.html', 'r') as email_end_pass:
 		html_email_contents = email_end_pass.read().format(building_name=building_name,
