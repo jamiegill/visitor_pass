@@ -78,9 +78,7 @@ def email_end_pass(building_name, user_name, pass_unit, pass_num, pass_license_p
 		
 	send_email(html_email_contents, email_subject, email_dest)
 
-def email_address_add(building_name, user_name, user_email, user_password):
-
-	email_subject = "Welcome to VPass Portal, {}".format(user_name)
+def email_address_add(building_name, user_name, user_email, user_password, email_subject):
 
 	with open ('./visitor_pass/templates/email_address_add.html', 'r') as email_address_add:
 		html_email_contents = email_address_add.read().format(building_name=building_name,

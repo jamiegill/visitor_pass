@@ -165,7 +165,9 @@ def add_pass_post(building_id):
         building_name=session.query(Building).filter(Building.id == building_id).first().name
         flash ("Pass and user created - {} has been emailed with the Username and Password specified below".format(request.form["email"]), "success")
         flash ("Username: {}   |   Password: {}".format(request.form["email"], password), "info")
-        email_address_add(building_name,request.form["name"], request.form["email"], password)
+
+        email_subject = "Welcome to VPass Portal, {}".format(request.form["name"])
+        email_address_add(building_name,request.form["name"], request.form["email"], password, email_subject)
         # Once email is added to DB, get the latest "added userid" and use this for next DB addition
         added_userid=session.query(User.id).order_by(User.id.desc()).first()[0]
     
@@ -278,7 +280,10 @@ def edit_pass_post(pass_id):
             session.add(add_email)
             db_commit_check(building_id,current_user.id,"Edit New Email = {}, Name = {}, Phone = {}".format(email, edit_user.name, edit_user.phone))
             building_name=session.query(Building).filter(Building.id == building_id).first().name
-            email_address_add(building_name,request.form["name"], request.form["email"], password)
+
+            email_subject = "VPass Portal - Username Change initiated by administrator"
+
+            email_address_add(building_name,request.form["name"], request.form["email"], password, email_subject)
             flash ("{} has been emailed with the Username and Password specified below".format(request.form["email"]), "success")
             flash ("Username: {}   |   Password: {}".format(request.form["email"], password), "info")
         
@@ -533,6 +538,9 @@ def customer_end_pass_get(pass_id):
 @app.route("/passes/<int:pass_id>/cust_end_pass", methods=["POST"])
 def customer_end_pass_post(pass_id):
     
+    def email_end_pass_func(email_dest):
+        email_end_pass(building_name, user_name, pass_unit, pass_num, pass_license_plate, pass_plate_expire, email_dest)
+
     building_id = session.query(Pass).filter_by(id=pass_id).first().building_id
     building_data = session.query(Building).filter_by(id=building_id).first()
     building_name = building_data.name
@@ -551,6 +559,16 @@ def customer_end_pass_post(pass_id):
     email_dest = user_data.email
 
 
+    # send email out before resetting values
+    email1 = pass_data.email_1
+    email2 = pass_data.email_2
+    
+    if not email1 is None:
+        email_end_pass_func(email1)
+    if not email2 is None:
+        email_end_pass_func(email2)
+
+
     # remove pass entries
     pass_data.license_plate = None
     pass_data.plate_expire = None
@@ -563,7 +581,7 @@ def customer_end_pass_post(pass_id):
     user_id = pass_data.resident_id
     
     flash ("Parking ended", "info")
-    email_end_pass(building_name, user_name, pass_unit, pass_num, pass_license_plate, pass_plate_expire, email_dest)
+    email_end_pass_func(email_dest)
     return redirect(url_for("customer_pass_get", user_id=user_id))
 
 @app.route("/account_settings", methods=["GET"])
@@ -633,6 +651,57 @@ def account_settings_post():
             flash("New username: {}".format(request.form["email"]), "success")
             return redirect(url_for("logout_get"))
 
+@app.route("/forgot_password", methods=["GET"])
+def forgot_password_get():
+    return render_template("forgot_password.html")
+
+@app.route("/forgot_password", methods=["POST"])
+def forgot_password_post():
+
+    email = request.form["email"]
+    name = request.form["name"]
+    phone = request.form["phone"]
+
+    try:
+        session.query(User).filter(User.email.like(email)).first().email
+        user_data=session.query(User).filter(User.email.like(email)).first()
+
+        if user_data.phone == phone:
+            pass
+        elif user_data.name == name:
+            pass
+        else:
+            flash ("Incorrect verification details", "danger")
+            return render_template("forgot_password.html")
+
+        building_id=user_data.building_id
+        user_id=user_data.id
+        user_name=user_data.name
+        user_phone=user_data.phone
+        user_email=user_data.email
+
+        building_name=session.query(Building).filter(Building.id == building_id).first().name
+
+        #the remainder will only be done if "forget password" verification is correct
+        print(user_data.email, user_data.phone, user_data.name, user_data.phone, user_data.password)
+        password = []
+        password = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(6))
+        user_data.password = generate_password_hash(password)
+        session.add(user_data)
+        db_commit_check(building_id,"pwd_rst","Password Reset UserID= {}, Name = {}, Email = {}, Phone = {}, Pswd = {}".format(user_id,user_name,user_email,user_phone,password))
+        
+        email_subject = "VPass Portal - Password Update"
+        email_address_add(building_name, user_name, email, password, email_subject)
+        flash ("Temporary password has been emailed to {}".format(email), "success")
+        return render_template("login.html")
+
+    except AttributeError:
+            flash ("No email found", "danger")
+            return render_template("forgot_password.html")
+
+
+
+
 @app.route("/login", methods=["GET"])
 def login_get():
     return render_template("login.html")
@@ -643,7 +712,7 @@ def login_post():
     password = request.form["password"]
     user = session.query(User).filter_by(email=email).first()
     if not user or not check_password_hash(user.password, password):
-        flash("Incorrect username or password", "danger")
+        flash("Incorrect username or password (note: case sensitive)", "danger")
         return redirect(url_for("login_get"))
         
     login_user(user)
