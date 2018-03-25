@@ -2,8 +2,8 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="btn-group pull-left">
-    <h2> Building Name: {{ building.name }}  </h2>
+
+    <h2 class = "pull-left"> Building Name: {{ building.name }}  </h2><br><br><br><br>
     <p class = "pull-left"> timezone = {{ building.timezone }}</p>
 <br><br>
 {% if access_priv == "admin" %}
@@ -13,7 +13,7 @@
 {% endif %}
 
 
-
+<div class="btn-group pull-left">
 <form action="{{ url_for('get_passes', building_id=building.id) }}",  method="POST">
     <div class="search_class" style="float:right">
         <input  type="text" class="form-control" id="search" name="search" placeholder={{ search_string }}></textarea> 
@@ -23,9 +23,6 @@
     </div>
     
 </form>
-
-
-
 
 
 <br><br><br><br>

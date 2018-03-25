@@ -33,8 +33,14 @@
                     </button>
                     <img src="{{ url_for('static', filename='graphics/VPassPortalLogoTransShrink.png', width=20, height=200) }}"/>
 
-                    <h1 class="pull-left">VPass Portal</h1>          
-                    
+                    {% if current_user.privilege == "admin" or current_user.privilege == "superuser" or current_user.privilege == "read_only" %}
+                    <h1 class="pull-left"><a href="{{ url_for('get_root') }}" style="text-decoration:none;color:white">VPass Portal</a></h1>
+                    {% elif current_user.privilege == "general" %}
+                    <h1 class="pull-left"><a href="{{ url_for('customer_pass_get', user_id=current_user.id) }}" style="text-decoration:none;color:white">VPass Portal</a></h1>
+                    {% else %}
+                    <h1 class="pull-left">VPass Portal</h1>
+                    {% endif %}          
+
             </div>
             
             

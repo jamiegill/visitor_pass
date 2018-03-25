@@ -7,25 +7,24 @@
 </h3>
 
 <p>
-    Please enter a guest's license plate number to begin the timer:
+    Please enter the details below to activate your parking pass.<br>
 </p>
 
-<form role="form" method="POST">
-    <div class="form-group">
-        <label for="license_plate">License Plate#:</label>
+
+
+<form class="new-group" role="form" method="POST">
+        <label for="license_plate">Visitor License Plate#:</label>
         <input type="text" class="form-control" id="license_plate" name="license_plate" placeholder="License Plate" required>
+        <label for="visitor_email_addresses">Visitor Email addresses:</label>
         <input type="email" class="form-control" id="email1" name="email1" placeholder="Email #1(optional)">
         <input type="email" class="form-control" id="email2" name="email2" placeholder="Email #2(optional)">
-    </div>
     <button type="submit" class="btn btn-primary">OK</button>
 </form>
 
-<div class="btn-group"
-<form action="{{ url_for('customer_pass_get', user_id=pass_user_id) }}">
-    <button type="submit" class="btn btn-danger">back</button>
-</form>
-</div><br>
-* Please fill out Email address(es) to update the visitor (ie. vehicle owner) with parking pass status
+<br>
+
+* Your email address (<u>{{ user_email }}</u>) will receive notifications about the parking pass status<br>
+* Up to 2 visitors can receive email notifications of this parking pass<br>
 
 
 {% endblock %}

@@ -2,9 +2,25 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>
-    Delete Pass# {{ pass_data.pass_id }}
-</h1>
+<h2>
+    Delete Pass
+</h2>
+
+
+
+<div>
+
+{% if delete_email == True %}
+- Parking pass (<b>{{ pass_data.pass_id }}</b>) will be deleted<br>
+- Account <b>{{ user_data.email }}</b> will be deleted<br>
+
+{% else %}
+- Parking pass (<b>{{ pass_data.pass_id }}</b>) will be deleted<br>
+- Account <b>{{ user_data.email }}</b> is associated to other pass(es) and will NOT be deleted
+{% endif %}
+
+
+</div>
 
 <h4>
     Are you sure?
@@ -22,18 +38,6 @@
 </form>
 </div>
 
-<div>
-Note:
-{% if delete_email == True %}
-Only this parking pass (<b>{{ pass_data.pass_id }}</b>) is associated to the following email address: <b>{{ user_data.email }}</b><br>
-This email address will be deleted as well
-{% else %}
-The email address (<b>{{ user_data.email }}</b>) associated to this pass (<b>{{ pass_data.pass_id }}</b>) is also associated to other parking pass(es)<br>
-The email address will NOT be deleted
-{% endif %}
-
 {% endblock %}
-
-</div>
 
 

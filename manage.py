@@ -40,7 +40,7 @@ def adduser():
     user = User(name=name, email=email, phone=phone, privilege=privilege, building_id=building_id,
                 password=generate_password_hash(password))
     session.add(user)
-    db_commit_check(building_id, "ADMIN_COMMIT - adduser: name={} email={} phone={} privilege={} building_id={} password={}"
+    db_commit_check(building_id, "su", "ADMIN_COMMIT - adduser: name={} email={} phone={} privilege={} building_id={} password={}"
         .format(name, email, phone, privilege, building_id, password)) 
 
     print("user added. Auto-generated password is {}".format(password))
@@ -62,6 +62,78 @@ def addbuilding():
         session.add(building)
         #Be careful with this commit, there is no check for this (because building_id isnt' created yet)
         session.commit()
+
+@manager.command
+def delete_item():
+
+
+    delete_item = []
+    while delete_item not in ("Building", "User", "Pass"):
+        delete_item = input("Specify 'Building', 'User' or 'Pass': ")
+    
+    item_id = input("What is the {} ID: ".format(delete_item))
+
+
+
+    if delete_item == "Pass":
+        if session.query(Pass).filter_by(id=item_id).first():
+            item_data = session.query(Pass).filter_by(id=item_id).first()
+            building_id = item_data.building_id
+
+            log_msg = ("ID = {}, Unit = {}, resident_id = {}".format(item_data.pass_id, item_data.unit, item_data.resident_id))
+            print(log_msg)
+        else:
+            print("Please check if {} ID: {} actually exists".format(delete_item, item_id))
+            exit()
+
+    if delete_item == "User":
+        if session.query(User).filter_by(id=item_id).first():
+            item_data = session.query(User).filter_by(id=item_id).first()
+            building_id = item_data.building_id
+            log_msg = ("Name = {}, Email = {}, Phone = {} Privilege = {}".format(item_data.name, item_data.email, item_data.phone, item_data.privilege))
+            print(log_msg)
+        else:
+            print("Please check if {} ID: {} actually exists".format(delete_item, item_id))
+            exit()
+
+        #make sure no Pass is dependant on this User
+        if session.query(Pass).filter_by(resident_id=item_id).first():
+            pass_id = session.query(Pass).filter_by(resident_id=item_id).first().id
+            print("You must remove passes before deleting the user --> look at Pass ID {}".format(pass_id))
+            exit()
+
+
+    if delete_item == "Building":
+        if session.query(Building).filter_by(id=item_id).first():
+            item_data = session.query(Building).filter_by(id=item_id).first()
+            building_id = item_id
+
+            log_msg = ("Name = {}, Address = {}, Contact Name = {}, Contact Phone = {}, Total Licenses = {}, Used Licenses = {}, Timezone = {}, Creation_date = {}".format(
+                item_data.name, item_data.address, item_data.contact_name, item_data.contact_phone, item_data.total_licenses, item_data.used_licenses, 
+                item_data.timezone, item_data.creation_date))
+
+            print(log_msg)
+            print("NOTE: If you proceed to delete the building, don't worry about the NoneType error it will throw --> this occurs because the building_id disappears, it's expected behavior")
+        else:
+            print("Please check if {} ID: {} actually exists".format(delete_item, item_id))
+            exit()
+
+        #make sure no User is dependant on this Building
+        if session.query(User).filter_by(building_id=item_id).first():
+            user_id = session.query(User).filter_by(building_id=item_id).first().id
+            print("You must remove users before deleting the building --> look at User ID {}".format(user_id))
+            exit()
+
+
+
+    confirm_delete = []
+    while confirm_delete != "YES":
+        confirm_delete = input("Type 'YES' to execute deletion:")
+
+    session.delete(item_data)
+    db_commit_check(building_id, "su", "ADMIN_COMMIT - delete{} {}".format(delete_item, log_msg))
+
+
 
 class DB(object):
     def __init__(self, metadata):

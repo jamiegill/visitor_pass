@@ -82,7 +82,9 @@ def get_passes(building_id):
     
     # Join the User and Pass table together, foreign key is Pass.resident_id
     #passes = session.query(User.email, User.name, User.phone, Pass.id, Pass.unit, Pass.pass_id, Pass.license_plate, Pass.plate_expire).join(Pass, Pass.resident_id == User.id).filter(Pass.building_id == building_id)
-    passes = session.query(User.email, User.name, User.phone, Pass.id, Pass.unit, Pass.pass_id, Pass.license_plate, Pass.plate_expire).join(Pass, Pass.resident_id == User.id).filter(or_(User.email.like(search_var), User.name.like(search_var), User.phone.like(search_var),Pass.unit.like(search_var),Pass.pass_id.like(search_var),Pass.license_plate.like(search_var)))
+    passes = session.query(User.email, User.name, User.phone, Pass.id, Pass.unit, Pass.pass_id, Pass.license_plate, Pass.plate_expire).join(
+        Pass, Pass.resident_id == User.id).filter(Pass.building_id == building_id).filter(or_(User.email.like(search_var), User.name.like(search_var), User.phone.like(
+            search_var),Pass.unit.like(search_var),Pass.pass_id.like(search_var),Pass.license_plate.like(search_var)))
 
     
     # find building details
@@ -145,9 +147,15 @@ def add_pass_post(building_id):
     # Check for duplicate email
     try:
         session.query(User).filter(User.email.like(request.form["email"])).first().email
-        flash ("Adding pass to existing email: {}".format(request.form["email"]), "info")
-        added_userid=session.query(User).filter(User.email.like(request.form["email"])).first().id
-        
+        added_user=session.query(User).filter(User.email.like(request.form["email"])).first()
+        added_userid=added_user.id
+        if added_user.privilege == "admin":
+            flash ("{} cannot be assigned to a visitor parking pass because it is an admin account".format(request.form["email"]), "danger")
+            return redirect(url_for("add_pass_post", building_id=building_id))
+        elif added_user.building_id != building_id:
+            flash ("{} is used in another building (bID {}), please use a different email address".format(request.form["email"], added_user.building_id), "danger")
+            return redirect(url_for("add_pass_post", building_id=building_id))
+
     except AttributeError:
         # Add new email address to the DB
         password = []
@@ -161,7 +169,7 @@ def add_pass_post(building_id):
         building_id=building_id
         )
         session.add(add_email)
-        db_commit_check(building_id,current_user.id,"Add New Email = {}, Name = {}, Phone = {}".format(request.form["email"], request.form["name"], request.form["phone"]))
+        db_commit_check(building_id,current_user.id,"(email) Add New Email = {}, Name = {}, Phone = {}, Pswd = {}".format(request.form["email"], request.form["name"], request.form["phone"], password))
         building_name=session.query(Building).filter(Building.id == building_id).first().name
         flash ("Pass and user created - {} has been emailed with the Username and Password specified below".format(request.form["email"]), "success")
         flash ("Username: {}   |   Password: {}".format(request.form["email"], password), "info")
@@ -170,9 +178,6 @@ def add_pass_post(building_id):
         email_address_add(building_name,request.form["name"], request.form["email"], password, email_subject)
         # Once email is added to DB, get the latest "added userid" and use this for next DB addition
         added_userid=session.query(User.id).order_by(User.id.desc()).first()[0]
-    
-    
-
     
     # Add a pass to the DB 
     add_pass = Pass(
@@ -188,21 +193,23 @@ def add_pass_post(building_id):
     db_commit_check(building_id,current_user.id,"Add New Pass = {}, Expiry Timer = {}, Unit = {}, ResID = {}".format(request.form["pass_id"],
     request.form["maxtime"], request.form["unit"], added_userid))
     
+    flash ("Adding pass to existing email: {}".format(request.form["email"]), "info")
     
     return redirect(url_for("get_passes", building_id=building_id))
 
 @app.route("/passes/<int:pass_id>/edit", methods=["GET"])
 @login_required
 def edit_pass_get(pass_id):
-        # Permit/deny access to page depening on logged in user
-#    if current_user.privilege in ("admin", "superuser") and current_user.building_id == building_id:
-#        pass
-#    else:
-#        flash ("Authorization Error - redirected to login page", "danger")
-#        return redirect(url_for("login_get"))
     
-    this_pass = session.query(Pass.pass_id, Pass.unit, Pass.maxtime, User.email, User.name, User.phone).join(User, User.id == Pass.resident_id).filter(Pass.id == pass_id).first()
+    this_pass = session.query(Pass.pass_id, Pass.unit, Pass.maxtime, Pass.building_id, User.email, User.name, User.phone).join(User, User.id == Pass.resident_id).filter(Pass.id == pass_id).first()
             
+    # Permit/deny access to page depening on logged in user
+    if current_user.privilege in ("admin", "superuser") and current_user.building_id == this_pass.building_id:
+        pass
+    else:
+        flash ("Authorization Error - redirected to login page", "danger")
+        return redirect(url_for("login_get"))
+
     return render_template("edit_pass.html",
     this_pass=this_pass
     )
@@ -263,7 +270,6 @@ def edit_pass_post(pass_id):
             # Check for duplicate email elsewhere in the system
         try:
             session.query(User).filter(User.email.like(request.form["email"])).first().email
-            flash ("Adding pass to existing email: {}".format(request.form["email"]), "info")
         
         except AttributeError:
             # Add new email address to the DB --> existing user and phone number must follow
@@ -278,7 +284,7 @@ def edit_pass_post(pass_id):
             password=generate_password_hash(password),
             )
             session.add(add_email)
-            db_commit_check(building_id,current_user.id,"Edit New Email = {}, Name = {}, Phone = {}".format(email, edit_user.name, edit_user.phone))
+            db_commit_check(building_id,current_user.id,"(email) Edit New Email = {}, Name = {}, Phone = {}, Pswd = {}".format(email, edit_user.name, edit_user.phone, password))
             building_name=session.query(Building).filter(Building.id == building_id).first().name
 
             email_subject = "VPass Portal - Username Change initiated by administrator"
@@ -287,13 +293,22 @@ def edit_pass_post(pass_id):
             flash ("{} has been emailed with the Username and Password specified below".format(request.form["email"]), "success")
             flash ("Username: {}   |   Password: {}".format(request.form["email"], password), "info")
         
-        new_email = session.query(User).filter(User.email.like(request.form["email"])).first()    
+        new_email = session.query(User).filter(User.email.like(request.form["email"])).first()
+
+        if new_email.privilege == "admin":
+            flash ("{} cannot be assigned to a visitor parking pass because it is an admin account".format(request.form["email"]), "danger")
+            return redirect(url_for("edit_pass_get", pass_id=pass_id))
+        elif new_email.building_id != building_id:
+            flash ("{} is used in another building (bID {}), please use a different email address".format(request.form["email"], new_email.building_id), "danger")
+            return redirect(url_for("edit_pass_get", pass_id=pass_id))
+
         new_email_id = new_email.id
         edit_pass_resident_id = edit_pass
         edit_pass_resident_id.resident_id = new_email_id
         session.add(edit_pass_resident_id)
         db_commit_check(building_id,current_user.id,"Edit PassID = {} Pass = {}, Resident ID = {}, Email = {}".format(pass_id, edit_pass.pass_id, new_email_id, new_email.email))
         user_list.append("Email = {}".format(email))
+        flash ("Adding pass to existing email: {}".format(request.form["email"]), "info")
         # Check the PREVIOUS email address and remove if NO passes are assigned to that UserID
         pass_count = session.query(Pass).filter(Pass.resident_id == prev_user.id).count()
         print(pass_count)
@@ -336,7 +351,7 @@ def edit_pass_post(pass_id):
         user_list_output = ",".join(user_list)
         flash ("Changes to user account: {}".format(user_list_output), "info")
         
-    return redirect(url_for("edit_pass_post", pass_id=pass_id))
+    return redirect(url_for("get_passes", building_id=building_id))
 
 @app.route("/passes/<int:pass_id>/delete", methods=["GET"])
 @login_required
@@ -446,10 +461,12 @@ def customer_use_pass_get(pass_id):
     
     # Get info about this pass' user
     pass_user_id = pass_data.resident_id
+    user_email = session.query(User).filter(User.id == pass_user_id).first().email
     
     return render_template("cust_use_pass.html",
     pass_data=pass_data,
-    pass_user_id=pass_user_id
+    pass_user_id=pass_user_id,
+    user_email=user_email
     )
     
 @app.route("/passes/<int:pass_id>/cust_use_pass", methods=["POST"])
@@ -459,7 +476,7 @@ def customer_use_pass_post(pass_id):
     def email_use_pass_func(email_dest):
         email_use_pass(building_name, user_name, pass_unit, pass_num, pass_license_plate, pass_plate_expire, email_dest)
         field_update = "Pass_num = {}, License_Plate = {}, Expiry Time = {}, Email_Dest = {}".format(pass_num, pass_license_plate, pass_plate_expire, email_dest)
-        logger.debug("{}:uid {}:{}{}".format(building_name, current_user.id, "email trigger - ", field_update))
+        logger.debug("{}:uid {}:{}{}".format(building_name, current_user.id, "email trigger UsePass - ", field_update))
 
 
 
@@ -540,6 +557,10 @@ def customer_end_pass_post(pass_id):
     
     def email_end_pass_func(email_dest):
         email_end_pass(building_name, user_name, pass_unit, pass_num, pass_license_plate, pass_plate_expire, email_dest)
+        field_update = "Pass_num = {}, License_Plate = {}, Expiry Time = {}, Email_Dest = {}".format(pass_num, pass_license_plate, pass_plate_expire, email_dest)
+        logger.debug("{}:uid {}:{}{}".format(building_name, current_user.id, "email trigger EndPass - ", field_update))
+
+
 
     building_id = session.query(Pass).filter_by(id=pass_id).first().building_id
     building_data = session.query(Building).filter_by(id=building_id).first()
@@ -688,10 +709,11 @@ def forgot_password_post():
         password = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(6))
         user_data.password = generate_password_hash(password)
         session.add(user_data)
-        db_commit_check(building_id,"pwd_rst","Password Reset UserID= {}, Name = {}, Email = {}, Phone = {}, Pswd = {}".format(user_id,user_name,user_email,user_phone,password))
+        db_commit_check(building_id,"pwd_rst","(email) Password Reset UserID= {}, Name = {}, Email = {}, Phone = {}, Pswd = {}".format(user_id,user_name,user_email,user_phone,password))
         
         email_subject = "VPass Portal - Password Update"
         email_address_add(building_name, user_name, email, password, email_subject)
+
         flash ("Temporary password has been emailed to {}".format(email), "success")
         return render_template("login.html")
 
