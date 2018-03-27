@@ -9,6 +9,7 @@ from .send_email import *
 from .filters import *
 from sqlalchemy import or_
 from werkzeug.security import generate_password_hash, check_password_hash
+from time import sleep
 import string
 
 
@@ -19,6 +20,13 @@ formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(name)s:%(message)s')
 file_handler = logging.FileHandler('logs/logger.log')
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
+
+#run script to check for expired license plate:
+def sleep_func():
+    from time import sleep
+    while True:
+        print("HI")
+        sleep(1)
 
 
 def db_commit_check(building_id, log_userid, field_update):
@@ -35,22 +43,48 @@ def db_commit_check(building_id, log_userid, field_update):
     building_name = building_id.name
     logger.debug("{}:uid {}:{}{}".format(building_name, log_userid, commit_status, field_update))
 
-def plate_datetime(passes):
-    # See if timestamp has expired
-    curr_time=datetime.datetime.now()
-    for record in passes:
-        record_id = record.id
-        record = record.plate_expire
-        if record == None:
-            pass
-        elif curr_time > record:
-            pass_record = session.query(Pass).filter(Pass.id == record_id).first()
-            pass_record.plate_expire = None
-            pass_record.license_plate = None
-            pass_record.email_1 = None
-            pass_record.email_2 = None
-            session.add(pass_record)
-            db_commit_check(pass_record.building_id,"sys","AutoEndPass PassID = {}, Pass = {}, License Plate = {}, Plate Expire = {}".format(pass_record.id, pass_record.pass_id, pass_record.license_plate, pass_record.plate_expire))
+def plate_datetime():
+
+    # This function should be running in a seperate thread all of the time - spawned in this script
+    # checks for expired parking passes every n seconds
+
+    while True:
+        passes = session.query(Pass).all()
+
+        curr_time=datetime.datetime.now()
+        for record in passes:
+            record_id = record.id
+            record = record.plate_expire
+            if record == None:
+                pass
+            elif curr_time > record:
+                pass_record = session.query(Pass).filter(Pass.id == record_id).first()
+                building_record = session.query(Building).filter(Building.id == pass_record.building_id).first()
+                building_name = building_record.name
+                building_timezone = building_record.timezone
+                user_record = session.query(User).filter(User.id == pass_record.resident_id).first()
+                user_name = user_record.name
+                email_dest = user_record.email
+
+                pass_unit = pass_record.unit
+                pass_num = pass_record.pass_id
+                pass_license_plate = pass_record.license_plate
+                pass_plate_expire = dateformat(pass_record.plate_expire, building_timezone)
+
+
+                pass_record.plate_expire = None
+                pass_record.license_plate = None
+                pass_record.email_1 = None
+                pass_record.email_2 = None
+                session.add(pass_record)
+                db_commit_check(pass_record.building_id,"sys","AutoEndPass PassID = {}, Pass = {}, License Plate = {}, Plate Expire = {}".format(pass_record.id, pass_record.pass_id, pass_record.license_plate, pass_record.plate_expire))
+
+                email_end_pass(building_name, user_name, pass_unit, pass_num, pass_license_plate, pass_plate_expire, email_dest)
+                field_update = "Pass_num = {}, License_Plate = {}, Expiry Time = {}, Email_Dest = {}".format(pass_num, pass_license_plate, pass_plate_expire, email_dest)
+                logger.debug("{}:uid{}:{}{}".format(building_name, "sys" , "email trigger EndPass(auto) - ", field_update))
+
+        sleep(60)
+
 
 @app.route("/")
 @login_required
@@ -91,7 +125,6 @@ def get_passes(building_id):
     building = session.query(Building).filter(Building.id == building_id).first()
     # find user details
     
-    plate_datetime(passes)
     return render_template("view_passes.html",
     passes=passes,
     building=building,
@@ -435,8 +468,6 @@ def customer_pass_get(user_id):
     
     """ List of passes for a user """
     passes = session.query(Pass).filter(Pass.resident_id == user_id).all()
-    
-    plate_datetime(passes)
     
     # find building details
     building_id = session.query(User).filter(User.id == user_id).first().building_id
