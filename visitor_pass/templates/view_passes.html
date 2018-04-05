@@ -12,6 +12,9 @@
 </form>
 {% endif %}
 
+<form action="{{ url_for('offline_search_get', building_id=building.id) }}", method="GET">
+    <button type="submit" class="btn btn-primary pull-right">Offline Search</button>
+</form>
 
 <div class="btn-group pull-left">
 <form action="{{ url_for('get_passes', building_id=building.id) }}",  method="POST">
@@ -24,9 +27,6 @@
     
 </form>
 
-<form action="{{ url_for('offline_search_get', building_id=building.id) }}", method="GET">
-    <button type="submit" class="btn btn-primary pull-left">Offline Search</button>
-</form>
 
 
 <br><br><br><br>
