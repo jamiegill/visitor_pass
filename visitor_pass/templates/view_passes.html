@@ -24,6 +24,10 @@
     
 </form>
 
+<form action="{{ url_for('offline_search_get', building_id=building.id) }}", method="GET">
+    <button type="submit" class="btn btn-primary pull-left">Offline Search</button>
+</form>
+
 
 <br><br><br><br>
 </div>

@@ -11,6 +11,8 @@ from sqlalchemy import or_
 from werkzeug.security import generate_password_hash, check_password_hash
 from time import sleep
 import string
+import tempfile
+import os
 
 
 import logging
@@ -132,12 +134,42 @@ def get_passes(building_id):
     search_string=search_string
     )
 
-@app.route("/passes/<int:building_id>/", methods=["GET","POST"])
+@app.route("/offline/<int:building_id>/", methods=["GET"])
 @login_required
-def pass_search_get(building_id):
-    if request.method == 'POST':
-        print(request.form["search"])
-    return redirect(url_for("get_passes", building_id=building_id))
+
+def offline_search_get(building_id):
+
+    building_data = session.query(Building).filter_by(id=building_id).first()
+    passes = session.query(Pass.license_plate, Pass.plate_expire).filter(Pass.building_id == building_id)
+
+    #Open offline_search template
+    f = open("./visitor_pass/templates/offline_search.html", "r")
+    html_file = f.readlines()
+    f.close()
+
+    #Make modifications to offline_search variable
+    for indv_pass in passes:
+        if indv_pass.license_plate == None:
+            pass
+        else:
+            building_timezone = building_data.timezone
+            pass_plate_expire = dateformat(indv_pass.plate_expire, building_timezone)
+            add_record = '<li><a href="#">{} - <font color="green">{}</font></a></li>'.format(indv_pass.license_plate, pass_plate_expire)
+            html_file.insert(74, add_record)
+    
+    #Remote offline_search_results if exists
+    try:
+        os.remove("./visitor_pass/templates/offline_search_results.html")
+    except OSError:
+        pass
+
+    #Create offline_search_results and redirect
+    f = open("./visitor_pass/templates/offline_search_results.html", "w+")
+    html_file = "".join(html_file)
+    f.write(html_file)
+    f.close()
+        
+    return render_template("offline_search_results.html")
 
 
 @app.route("/passes/<int:building_id>/add", methods=["GET"])
